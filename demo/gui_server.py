@@ -66,45 +66,85 @@ def build_review(folder: Path) -> dict:
     proposals = []
     untagged = []
     archive_suggestions = []
+    other_files = []
+    type_counts = {}
     duplicate_members = {
         core.rel(folder, member)
         for members in (group for group in hashes.values() if len(group) > 1)
         for member in members
     }
     for path in files:
-        if path.suffix.lower() not in core.DOCUMENT_EXTS:
-            skipped.append({"file": core.rel(folder, path), "reason": "not a supported document format in this demo"})
-            continue
-        review = core.review_file(path)
-        if not review["supported"]:
-            skipped.append({"file": core.rel(folder, path), "reason": review["error"] or "could not review"})
-            continue
-        fields = review["fields"]
-        findings.append(
-            {
-                "file": core.rel(folder, path),
-                "fields": {key: fields.get(key) for key in core.FIELDS},
-                "excerpt": review["excerpt"],
-            }
-        )
-        project = fields.get("project")
-        tag = core.tag_for(project) if project else None
+        info = core.classify_file(path)
+        type_counts[info["kind"]] = type_counts.get(info["kind"], 0) + 1
         item = core.rel(folder, path)
-        if tag:
+        if info["kind"] == "document":
+            review = core.review_file(path)
+            if not review["supported"]:
+                skipped.append({"file": item, "reason": review["error"] or "could not review"})
+                continue
+            fields = review["fields"]
+            findings.append(
+                {
+                    "file": item,
+                    "fields": {key: fields.get(key) for key in core.FIELDS},
+                    "excerpt": review["excerpt"],
+                }
+            )
+            project = fields.get("project")
+            tag = core.tag_for(project) if project else None
+            if tag:
+                proposals.append(
+                    {
+                        "id": len(proposals),
+                        "file": item,
+                        "tag": tag,
+                        "reason": f"project: {project}",
+                        "kind": "project",
+                    }
+                )
+            else:
+                untagged.append(item)
+            if item not in duplicate_members:
+                suggestion = core.archive_suggestion(fields)
+                if suggestion:
+                    archive_suggestions.append({"file": item, **suggestion})
+        elif info["kind"] in core.NON_DOCUMENT_KINDS:
+            metadata = core.file_metadata(path)
+            other_files.append(
+                {
+                    "file": item,
+                    "kind": info["kind"],
+                    "label": info["label"],
+                    "size": metadata["size"],
+                    "detail": metadata["detail"],
+                }
+            )
             proposals.append(
                 {
                     "id": len(proposals),
                     "file": item,
-                    "tag": tag,
-                    "reason": f"project: {project}",
+                    "tag": info["kind"],
+                    "reason": f"file type: {info['label']}",
+                    "kind": "type",
                 }
             )
         else:
-            untagged.append(item)
-        if item not in duplicate_members:
-            suggestion = core.archive_suggestion(fields)
-            if suggestion:
-                archive_suggestions.append({"file": item, **suggestion})
+            skipped.append(
+                {"file": item, "reason": f"unknown or unsupported file type ({info['extension']})"}
+            )
+
+    labels = {
+        "document": "Documents",
+        "image": "Images",
+        "video": "Video",
+        "audio": "Audio",
+        "other": "Other",
+    }
+    file_types = [
+        {"kind": kind, "label": labels[kind], "count": type_counts[kind]}
+        for kind in ("document", "image", "video", "audio", "other")
+        if type_counts.get(kind)
+    ]
 
     return {
         "folder": str(folder),
@@ -117,6 +157,8 @@ def build_review(folder: Path) -> dict:
         "skipped": skipped,
         "untagged": untagged,
         "archive_suggestions": archive_suggestions,
+        "other_files": other_files,
+        "file_types": file_types,
     }
 
 

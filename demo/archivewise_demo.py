@@ -27,7 +27,31 @@ MAX_DEPTH = 3
 MAX_FILES = 200
 TEXT_EXTS = {".txt", ".md", ".markdown", ".csv", ".log", ".json", ".xml", ".html", ".htm"}
 OFFICE_EXTS = {".docx", ".xlsx", ".pptx"}
-DOCUMENT_EXTS = TEXT_EXTS | OFFICE_EXTS | {".pdf", ".rtf"}
+LEGACY_EXTS = {".doc", ".xls", ".ppt"}
+FILE_TYPES = {
+    ".pdf": ("document", "PDF"),
+    ".docx": ("document", "Word"),
+    ".doc": ("document", "Word (legacy)"),
+    ".xlsx": ("document", "Excel"),
+    ".xls": ("document", "Excel (legacy)"),
+    ".pptx": ("document", "PowerPoint"),
+    ".ppt": ("document", "PowerPoint (legacy)"),
+    ".txt": ("document", "Text"),
+    ".csv": ("document", "CSV"),
+    ".md": ("document", "Markdown"),
+    ".json": ("document", "JSON"),
+    ".xml": ("document", "XML"),
+    ".html": ("document", "HTML"),
+    ".rtf": ("document", "RTF"),
+    ".jpg": ("image", "JPEG image"),
+    ".jpeg": ("image", "JPEG image"),
+    ".png": ("image", "PNG image"),
+    ".gif": ("image", "GIF image"),
+    ".mp4": ("video", "MP4 video"),
+    ".mp3": ("audio", "MP3 audio"),
+}
+DOCUMENT_EXTS = {ext for ext, (kind, _) in FILE_TYPES.items() if kind == "document"} | TEXT_EXTS
+NON_DOCUMENT_KINDS = {"image", "video", "audio"}
 ARCHIVE_STATUSES = {"signed", "paid", "final", "complete", "archived", "closed"}
 TAG_FILE = "archivewise-tags.json"
 FIELDS = ("type", "date", "project", "status")
@@ -278,6 +302,9 @@ def extract_text(path: Path) -> tuple[str, str | None]:
         return _pdf_text(path)
     if suffix == ".rtf":
         return _rtf_text(path)
+    if suffix in LEGACY_EXTS:
+        modern = {".doc": ".docx", ".xls": ".xlsx", ".ppt": ".pptx"}[suffix]
+        return "", f"legacy {suffix} file; save as {modern} to extract fields"
     if suffix in TEXT_EXTS:
         return _safe_read_text(path)
     return "", f"not a supported document format ({suffix or 'no extension'})"
@@ -322,6 +349,31 @@ def review_file(path: Path) -> dict:
         "fields": fields,
         "excerpt": evidence_excerpt(path),
         "error": None,
+    }
+
+
+def classify_file(path: Path) -> dict:
+    suffix = path.suffix.lower()
+    if suffix in FILE_TYPES:
+        kind, label = FILE_TYPES[suffix]
+    elif suffix in TEXT_EXTS:
+        kind, label = "document", "Text"
+    else:
+        kind, label = "other", "Unknown file"
+    return {"kind": kind, "label": label, "extension": suffix or "(none)"}
+
+
+def file_metadata(path: Path) -> dict:
+    info = classify_file(path)
+    try:
+        size = path.stat().st_size
+    except OSError:
+        size = 0
+    return {
+        "kind": info["kind"],
+        "label": info["label"],
+        "size": size,
+        "detail": f"{info['label']} - {human_size(size)}",
     }
 
 
@@ -406,6 +458,17 @@ def print_findings(
         print("   Not reviewed:")
         for path, reason in skipped:
             print(f"     - {rel(root, path)}: {reason}")
+    print()
+
+
+def print_other_files(root: Path, other_files: list[tuple[Path, dict]]) -> None:
+    print("3b. Other files recognized")
+    if not other_files:
+        print("   No image, video, or audio files.")
+        print()
+        return
+    for path, info in other_files:
+        print(f"   {rel(root, path)}  |  {info['label']}  |  {human_size(info['size'])}")
     print()
 
 
@@ -561,28 +624,36 @@ def main() -> int:
     skipped: list[tuple[Path, str]] = []
     proposals: list[tuple[Path, str]] = []
     archive_suggestions: list[tuple[Path, dict]] = []
+    other_files: list[tuple[Path, dict]] = []
     duplicate_members = {member for members in groups.values() for member in members}
     for path in files:
-        if path.name == TAG_FILE or path.suffix.lower() not in DOCUMENT_EXTS:
-            skipped.append((path, "not a supported document format in this demo"))
+        if path.name == TAG_FILE:
             continue
-        review = review_file(path)
-        if not review["supported"]:
-            skipped.append((path, review["error"] or "could not review"))
-            continue
-        fields = review["fields"]
-        findings.append((path, fields, review["excerpt"]))
-        project = fields.get("project")
-        if project:
-            tag = tag_for(project)
-            if tag:
-                proposals.append((path, tag))
-        if path not in duplicate_members:
-            suggestion = archive_suggestion(fields)
-            if suggestion:
-                archive_suggestions.append((path, suggestion))
+        info = classify_file(path)
+        if info["kind"] == "document":
+            review = review_file(path)
+            if not review["supported"]:
+                skipped.append((path, review["error"] or "could not review"))
+                continue
+            fields = review["fields"]
+            findings.append((path, fields, review["excerpt"]))
+            project = fields.get("project")
+            if project:
+                tag = tag_for(project)
+                if tag:
+                    proposals.append((path, tag))
+            if path not in duplicate_members:
+                suggestion = archive_suggestion(fields)
+                if suggestion:
+                    archive_suggestions.append((path, suggestion))
+        elif info["kind"] in NON_DOCUMENT_KINDS:
+            other_files.append((path, file_metadata(path)))
+            proposals.append((path, info["kind"]))
+        else:
+            skipped.append((path, f"unknown or unsupported file type ({info['extension']})"))
 
     print_findings(folder, findings, skipped)
+    print_other_files(folder, other_files)
     print_proposals(folder, proposals)
     print_archive(folder, groups, archive_suggestions)
 

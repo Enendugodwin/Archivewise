@@ -71,10 +71,10 @@ Walk through each page:
 1. **Overview** - confirm the folder path, summary numbers, and the "Select a card to open its page" hint.
 2. **Browse** - press **Browse**, use **Home** and the folder list, navigate to a folder, and press **Use this folder**. The folder should load in Overview.
 3. **Duplicates** - confirm two groups: `Project-A_contract.txt` with its copy, and `Project-B_invoice.txt` with its duplicate.
-4. **Documents** - confirm five rows with type, date, project, status, and an evidence excerpt.
-5. **Tags** - select all four tags and press **Approve selected**. Confirm the applied state and the result path to `archivewise-tags.json`.
+4. **Documents** - confirm five rows with type, date, project, status, and an evidence excerpt. The "Other files recognized" section lists images, video, and audio in folders that contain them.
+5. **Tags** - select all four tags and press **Approve selected**. Folders with images/media also show generic `image`, `video`, or `audio` type tags with a **TYPE** badge.
 6. **Archive** - confirm two duplicate groups under "Duplicate groups to resolve" and no file-level suggestions. **Archive suggestions are read-only; no files are moved.**
-7. **Needs attention** - confirm `broken.txt` and `scan.bin` under "Could not review", and `notes.txt` under "No tag proposal".
+7. **Needs attention** - confirm `broken.txt` and `scan.bin` under "Could not review", and `notes.txt` under "No tag proposal". `scan.bin` is identified as an unknown `.bin` file; legacy `.doc`, `.xls`, and `.ppt` files would also appear here with a conversion hint.
 8. **Navigation** - switch pages from the left sidebar, the app dock, and (on narrow screens) the mobile chips. The active page should stay in sync.
 9. **Window controls** - try minimize/restore, maximize, and close/reopen from the title bar.
 
@@ -86,7 +86,7 @@ Use **Change folder** to open:
 demo/formats-folder
 ```
 
-Expected result: **5 files, 5 documents, 5 proposed tags, 4 archive suggestions**.
+Expected result: **6 files, 5 documents, 6 proposed tags, 4 archive suggestions, 1 other file**. The PNG appears under **Documents > Other files recognized** and gets an `image` type tag.
 
 The folder contains `.docx`, `.xlsx`, `.html`, `.csv`, and `.rtf` files. Their fields should appear on **Documents**, tags on **Tags**, and destinations such as `Archive/2026/Project-C` on **Archive**.
 
@@ -153,19 +153,22 @@ The checker is read-only. It validates the package structure and catalog mapping
 | The page looks stale | Refresh; the server sends `Cache-Control: no-store`. |
 | The tag file is missing | It is inside the reviewed folder, named `archivewise-tags.json`. |
 | PDF is under "Needs attention" | Install optional PDF support: `python -m pip install -r demo\requirements.txt`. |
-| A file says "not a supported document format" | The demo reads documents, not images, audio, video, or archives. Word, Excel, PowerPoint, HTML, CSV, RTF, JSON, XML, Markdown, and optional PDF are supported. |
+| A file says "unknown or unsupported file type" | The demo recognizes the top 20 common extensions. Images, video, and audio are identified; unknown extensions are flagged. |
 | The checker command fails | Confirm Node.js is installed and the kit path is exactly as above. |
 
 ## 7. Instructor checklist
 
 - [ ] `python demo\gui_server.py` starts and opens the GUI
 - [ ] Overview shows 7 files, 2 duplicate groups, 5 documents, 4 proposed tags, 2 archive ideas
+- [ ] Overview's File types card shows Documents 6 and Other 1
 - [ ] Browse opens the in-app folder browser and loads a selected folder
 - [ ] Duplicates shows two groups
-- [ ] Documents shows five rows with evidence
+- [ ] Documents shows five rows with evidence and no other files
 - [ ] Tags accepts selection and shows the applied state
 - [ ] Archive shows the two duplicate groups and no file-level suggestions
 - [ ] `demo/formats-folder` shows 5 documents from DOCX, XLSX, HTML, CSV, and RTF
+- [ ] `demo/formats-folder` shows 1 other file (PNG) under Documents
+- [ ] `demo/formats-folder` shows 6 tags, including the `image` type tag
 - [ ] `demo/formats-folder` shows 4 archive suggestions
 - [ ] Needs attention shows 2 unresolved files and 1 file without a tag proposal
 - [ ] `archivewise-tags.json` is created in the reviewed folder

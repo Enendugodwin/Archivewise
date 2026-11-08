@@ -14,10 +14,10 @@ Every item under **Review** has its own page, and the dock, sidebar, and mobile 
 |---|---|
 | **Overview** | Folder picker, review summary, and links into each section |
 | **Duplicates** | Only the duplicate groups returned by the scan |
-| **Documents** | Extracted fields, sources, and evidence excerpts |
-| **Tags** | Tag selection, approval, and the applied-tag result |
+| **Documents** | Extracted document fields, plus other recognized file types |
+| **Tags** | Project tags and file-type tags for recognized images/media |
 | **Archive** | Read-only archive destinations and duplicate groups to resolve |
-| **Needs attention** | Files that could not be reviewed, and files without a tag proposal |
+| **Needs attention** | Unknown or legacy file types, unreadable files, and files without a tag proposal |
 
 The selected folder remains visible on every page, with a **Change folder** link back to Overview.
 
@@ -73,12 +73,33 @@ python demo\archivewise_demo.py "C:\Users\user\Documents\some-folder"
 
 1. Resolves the folder and lists files (depth 3, up to 200 files).
 2. Groups byte-identical files by SHA-256.
-3. Reads supported documents and extracts `Type`, `Date`, `Project`, and `Status`.
-4. Presents duplicate groups, document findings, proposed tags, archive suggestions, and unresolved items.
-5. Asks for approval of exact file and tag pairs.
-6. Records approved tags in `archivewise-tags.json` inside the reviewed folder.
+3. Classifies the top 20 common file extensions.
+4. Reads supported documents and extracts `Type`, `Date`, `Project`, and `Status`.
+5. Presents duplicate groups, document findings, other file types, proposed tags, archive suggestions, and unresolved items.
+6. Asks for approval of exact file and tag pairs.
+7. Records approved tags in `archivewise-tags.json` inside the reviewed folder.
 
 Archive suggestions are read-only. No file is moved by this demo.
+
+## File type recognition
+
+The demo recognizes these 20 extensions:
+
+```text
+.pdf .docx .doc .xlsx .xls .pptx .ppt .txt .csv .md
+.json .xml .html .rtf .jpg .jpeg .png .gif .mp4 .mp3
+```
+
+| Kind | Behavior |
+|---|---|
+| Documents | Extract fields, propose project tags, and suggest archive destinations |
+| Images (`.jpg`, `.jpeg`, `.png`, `.gif`) | Listed under **Documents > Other files recognized** and proposed as an `image` type tag |
+| Video (`.mp4`) | Listed as other files and proposed as a `video` type tag |
+| Audio (`.mp3`) | Listed as other files and proposed as an `audio` type tag |
+| Legacy Office (`.doc`, `.xls`, `.ppt`) | Recognized, but sent to **Needs attention** with a conversion hint |
+| Unknown extensions | Sent to **Needs attention** as unknown file types |
+
+Images, video, and audio are identified by extension and file size; no OCR, duration, or media decoding is performed.
 
 ## Supported document formats
 
@@ -108,7 +129,7 @@ The main sample folder stays text-only. To see the other formats, open this fold
 demo/formats-folder
 ```
 
-It contains Word, Excel, HTML, CSV, and RTF documents. Expected result: **5 files, 5 documents, 5 proposed tags, 4 archive suggestions**.
+It contains Word, Excel, HTML, CSV, and RTF documents plus a PNG image. Expected result: **6 files, 5 documents, 6 proposed tags, 4 archive suggestions, 1 other file**.
 
 ![Documents extracted from Word, Excel, HTML, CSV, and RTF](archivewise-pages-formats.png)
 
@@ -120,7 +141,7 @@ It contains Word, Excel, HTML, CSV, and RTF documents. Expected result: **5 file
 | `Project-B_invoice.txt` + `Project-B_invoice_duplicate.txt` | One duplicate group; both propose the `Project-B` tag |
 | `notes.txt` | Missing project field, so no tag is proposed |
 | `broken.txt` | Invalid UTF-8, reported as unresolved |
-| `scan.bin` | Not a supported document format, reported as not reviewed |
+| `scan.bin` | Unknown file type, reported under Needs attention |
 
 ## Honest limits
 
@@ -128,6 +149,9 @@ It contains Word, Excel, HTML, CSV, and RTF documents. Expected result: **5 file
 - Duplicate detection uses local SHA-256, not UGREEN `scan-dedupe`.
 - Word, Excel, PowerPoint, HTML, CSV, RTF, JSON, XML, and Markdown use the standard library. PDF requires the optional `pypdf` package.
 - Office extraction is text-only; formatting, images, and embedded objects are not extracted.
+- Images, video, and audio are identified by extension and file size only. The demo does not perform OCR, read dimensions, or parse media duration.
+- Legacy `.doc`, `.xls`, and `.ppt` files are recognized but not extracted; save them as the modern Office format to extract fields.
+- Type tags are generic (`image`, `video`, `audio`) and are not derived from file content.
 - Archive suggestions are read-only. The demo never moves, deletes, renames, or rewrites a reviewed file.
 - Tags are written to a JSON sidecar, not applied as NAS tags.
 - There are no platform approval gates or registered NAS experts in this demo.

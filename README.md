@@ -11,6 +11,7 @@ ArchiveWise is a Uliya Skill for the UGREEN NAS Skill Hackathon 2026 (Track: **A
 ## What it does
 
 - **Scope first.** Accepts one folder path or relative folder name; never scans the whole NAS.
+- **File type recognition.** Classifies the top 20 common extensions: documents are extracted; images, video, and audio are identified and given type tags; unknown or legacy files go to Needs attention.
 - **Duplicates as evidence.** Reports only groups returned by the NAS duplicate scan; never infers duplicates from names or sizes.
 - **Document findings with sources.** Extracts requested fields such as type, date, project, and status from supported documents, with a source path and evidence excerpt.
 - **Explicit approval.** Presents exact file and tag pairs and waits for approval, including approval to create a new tag.
@@ -20,7 +21,7 @@ ArchiveWise is a Uliya Skill for the UGREEN NAS Skill Hackathon 2026 (Track: **A
 
 ## Screenshots
 
-The GUI opens on the Overview page above; every Review item has its own page. The demo reads text, Word, Excel, PowerPoint, HTML, CSV, RTF, JSON, XML, Markdown, and optional PDF files.
+The GUI opens on the Overview page above; every Review item has its own page. The demo recognizes the top 20 common file extensions, extracts text, Word, Excel, PowerPoint, HTML, CSV, RTF, JSON, XML, Markdown, and optional PDF documents, and identifies images, video, and audio.
 
 <p align="center">
   <img src="demo/archivewise-pages-duplicates.png" width="49%" alt="Duplicates page">
@@ -35,7 +36,8 @@ The GUI opens on the Overview page above; every Review item has its own page. Th
   <img src="demo/archivewise-browse.png" width="49%" alt="In-app folder browser">
 </p>
 <p align="center">
-  <img src="demo/archivewise-pages-formats.png" width="98%" alt="Documents extracted from Word, Excel, HTML, CSV, and RTF files">
+  <img src="demo/archivewise-pages-type-tags.png" width="49%" alt="Image type tag on the Tags page">
+  <img src="demo/archivewise-pages-formats.png" width="49%" alt="Documents and other files recognized from Word, Excel, HTML, CSV, RTF, and PNG files">
 </p>
 
 ## Submission artifacts
