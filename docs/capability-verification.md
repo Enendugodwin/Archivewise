@@ -7,6 +7,14 @@
 
 Only catalog entries used by ArchiveWise are listed. Effect and approval values are copied from the catalog and are generation-time facts.
 
+## file-workflow -> file-agent
+
+| Action | Effect | Approval | Key parameters | Used for |
+|---|---|---|---|---|
+| `get-user-dir` | read | none | none | Resolve a relative folder under the actual NAS user directory. |
+
+Completion evidence: `ok=true` with the real directory path. File move and delete actions are not selected.
+
 ## ug-filesystem -> file-agent
 
 | Action | Effect | Approval | Key parameters | Used for |
@@ -46,7 +54,7 @@ Both actions are read-only. The Skill passes only real file paths returned by th
 - `file-workflow` `batch-del`: deletion is out of scope.
 - Compression, streaming, sharing, database hosting, and whole-NAS scanning: no catalog action is used for these.
 
-The plan's mapping list still names `file-workflow`, but the capability table and the current build decision exclude archive moves. The build decision controls, so the Skill does not select `file-workflow`.
+The Skill selects only `file-workflow` `get-user-dir` for safe relative-path resolution. File move and delete actions remain excluded.
 
 ## Open verification items for finalist testing
 

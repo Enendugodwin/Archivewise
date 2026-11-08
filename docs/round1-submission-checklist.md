@@ -5,9 +5,9 @@ Based on the Official Rules at https://ugreenhackathon.devpost.com/rules (access
 ## Project proposal PDF
 
 - [x] Separate PDF file: `dist/ArchiveWise-Round1-Proposal.pdf`
-- [x] At most 1 MB (72,543 bytes)
+- [x] At most 1 MB (46,734 bytes)
 - [x] Answers all ten required prompts, in order
-- [x] Ten substantive answers at most 500 English words (455 by whitespace token count)
+- [x] Ten substantive answers at most 500 English words (445 by whitespace token count)
 - [x] Team names, signatures, and third-party license information are outside the word count
 - [x] Third-party components, sources, licenses, and data flows disclosed
 - [x] English only
@@ -16,10 +16,10 @@ Based on the Official Rules at https://ugreenhackathon.devpost.com/rules (access
 ## Initial Skill package
 
 - [x] One ZIP: `dist/archivewise.zip`
-- [x] At most 10 MB (4,999 bytes)
-- [x] Uncompressed contents at most 10 MB (12,163 bytes)
-- [x] At most 100 files (2)
-- [x] Each file at most 1 MB (largest 9,088 bytes)
+- [x] At most 10 MB (6,616 bytes)
+- [x] Uncompressed contents at most 10 MB (15,609 bytes)
+- [x] At most 100 files (3)
+- [x] Each file at most 1 MB (largest 10,627 bytes)
 - [x] `SKILL.md` at the package root
 - [x] Supporting Markdown only under `references/`, directly linked from `SKILL.md`
 - [x] Name `archivewise`: lowercase, 2-64 characters, directory name matches

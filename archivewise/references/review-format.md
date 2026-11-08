@@ -11,13 +11,13 @@ Use this layout for every ArchiveWise review. Keep the wording tied to returned 
 
 ## 2. Duplicate groups
 
-| Group | Member files | Reported size | Evidence |
+| Group | Member files (if returned) | Returned details | Evidence |
 |---|---|---|---|
-| 1 | full paths from the scan | value returned for the group | the fact the scan returned, such as a shared content hash |
+| 1 | exact paths from the scan, or "not returned" | details exactly as returned, or "not provided" | evidence exactly as returned, or "not provided" |
 
 Report only groups returned by the duplicate scan. If the scan returned no groups, write "No duplicate groups were returned for this folder." Do not add groups from similar names or sizes.
 
-Report each size value exactly as the scan returned it. Do not total the groups or present a storage-savings figure, because the returned evidence does not establish what a user would save.
+If the scan returns size information, report it exactly as returned. Do not total group sizes or present a storage-savings figure. The scan's result shape may not include member paths, sizes, hashes, or a representative file; mark missing fields as unavailable and do not invent them.
 
 Preserve every reviewed file. ArchiveWise does not move, delete, replace, or rename files in this version.
 
@@ -35,7 +35,7 @@ Keep "missing" separate from a negative finding. A document that does not state 
 |---|---|---|---|
 | full path | tag name, or no change | the returned evidence that supports it | yes or no |
 
-Include the exact tag name for each file. Do not invent a tag identifier; the child expert resolves or creates the tag from the approved name. A file with no supporting evidence gets no tag and stays unchanged.
+Include the exact tag name for each file. Do not invent a tag identifier; the child expert resolves the tag by name. If the tag must be created, explicitly request approval to create it and apply it. A file with no supporting evidence gets no tag and stays unchanged.
 
 ## 5. Unresolved items
 
@@ -43,9 +43,9 @@ List every file that could not be read, every document that could not be extract
 
 ## 6. Approval request
 
-Ask a direct question that names the exact items:
+Ask a direct question that names the exact items and says if a new tag would be created:
 
-> Approve tag A on these two files and tag B on this file?
+> Create tag A if needed and apply it to these two files; apply existing tag B to this file?
 
 A general request to clean up the folder is not approval. Wait for the explicit answer before any change.
 

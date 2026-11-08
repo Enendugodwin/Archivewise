@@ -8,10 +8,10 @@ These cases validate prompt logic and package structure only. They do not prove 
 
 **Expected behavior:**
 
-1. Restates the folder and purpose; no extra questions because the folder and purpose are present.
+1. Restates the folder and purpose; no extra questions because the folder and purpose are present. If a relative folder is named, resolves it only under the NAS user directory and verifies that exact path.
 2. Delegates a read-only listing to `file-agent` for exactly that folder.
 3. Delegates a read-only duplicate scan to `file-agent` for the resolved folder path.
-4. Reports only the duplicate groups the scan returns, with member paths and the returned evidence.
+4. Reports only duplicate groups and fields actually returned by the scan. Missing member paths or evidence are marked unavailable; no group members are inferred.
 5. Proposes no deletion and preserves every file.
 6. Stops at `waiting_user` before any tag.
 7. Makes no claim about storage savings.
@@ -28,7 +28,7 @@ These cases validate prompt logic and package structure only. They do not prove 
 2. Lists the folder and scans duplicates.
 3. Passes only the real PDF paths from the listing to `document-agent`.
 4. Reports each document with source path, project, status, and an evidence excerpt; missing fields are marked missing.
-5. Proposes an existing tag name for each supported file, or no change, with a reason.
+5. Proposes a tag name for each supported file, or no change, with a reason. If a new tag may need to be created, the approval request explicitly says so.
 6. Presents the review and asks for explicit approval of exact file and tag pairs.
 7. After approval, applies only the approved tags.
 8. Reports per-file results and lists every failed or unresolved file.
@@ -60,7 +60,7 @@ These cases validate prompt logic and package structure only. They do not prove 
 
 ## Structural checks
 
-- Package contains only `SKILL.md` and `references/review-format.md`.
+- Package contains `SKILL.md` and only directly linked Markdown references under `references/`.
 - Root directory name equals the frontmatter name `archivewise`.
 - Every delegate line uses one `--target` and one `--instruction`.
 - The capability evidence section lists each selected CLI once with the catalog agent.

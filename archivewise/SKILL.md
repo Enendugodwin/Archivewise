@@ -13,7 +13,7 @@ ArchiveWise does not move, delete, compress, or decompress files in this version
 
 Ask only for what is missing, in one focused follow-up:
 
-- **Folder to review.** The exact folder path the user names. If the folder is missing from the request, ask for it. Do not substitute a default folder, a parent folder, or a wider search area.
+- **Folder to review.** A NAS folder path or a relative folder name the user identifies. If the folder is missing from the request, ask for it. Do not substitute a default folder, a parent folder, or a wider search area.
 - **Review purpose.** Duplicates only, document review, or both. If the user asks for documents, collect the fields or question they care about, such as document type, date, project, or status.
 - **Approval.** An explicit selection of files and tags. A general request to clean up the folder is not approval for any tag change.
 
@@ -36,12 +36,20 @@ Do not ask the user for CLI names, tag identifiers, or other values that a child
 
 Restate the folder, the purpose, and the document fields in one message. Ask for any missing item. Do not begin a scan until the folder is confirmed.
 
-## Step 2 — List the selected folder
-
-Delegate a read-only listing to `file-agent`. Use the exact folder the user confirmed.
+If the user gave a relative folder name, resolve it only under the user's NAS directory with this read-only delegation:
 
 ```
-delegate --target file-agent --instruction 'List the contents of the folder the user named, using a read-only listing with a bounded recursion depth and a result limit. If the user gave a relative folder name, resolve it inside the user directory first. Return the resolved folder path, then each file path, name, size, and modified time, and separate directories from files. Do not widen the scope. If the folder is missing or unreadable, report that and return no files. Change nothing.'
+delegate --target file-agent --instruction 'Resolve only the relative folder name the user provided, and only inside their actual NAS user directory. Use the registered get-user-dir capability, form the candidate path from its returned directory path, and verify that exact candidate with the registered ug-filesystem stat or ls capability. Return the resolved path or a clear not-found/inaccessible result. Do not search elsewhere and do not change files.'
+```
+
+For an absolute NAS path, verify only that exact path with the registered ug-filesystem stat or ls capability. If resolution or verification fails, report it and stop; never widen the search.
+
+## Step 2 — List the selected folder
+
+Delegate a read-only listing to `file-agent`. Use the exact resolved folder from step 1.
+
+```
+delegate --target file-agent --instruction 'List the contents of only the exact resolved folder path returned in the prior scope step, using a read-only listing with a bounded recursion depth and result limit. Return the exact folder path and the file paths and names actually returned; separate directories from files. Do not claim size or modified-time fields unless the capability result contains them. Do not widen the scope. If the folder is missing or unreadable, report that and return no files. Change nothing.'
 ```
 
 If the listing fails or the folder is empty, follow the completion-and-failure rules below and stop before the duplicate scan. Use the resolved folder path returned by the listing for every later step, and show that path in the review.
@@ -51,10 +59,10 @@ If the listing fails or the folder is empty, follow the completion-and-failure r
 Delegate a read-only duplicate scan to `file-agent` for the resolved folder path returned by the listing step.
 
 ```
-delegate --target file-agent --instruction 'Run a read-only duplicate scan on the resolved folder path returned by the listing delegation, with scope all unless the user asked for one media type. Return only the duplicate groups the scan reports, including every member path, the reported size, and the representative file if the result names one. Do not infer duplicates from similar names. Change nothing.'
+delegate --target file-agent --instruction 'Run a read-only duplicate scan on the exact resolved folder path returned by the listing delegation, with scope all unless the user asked for one media type. Return the duplicate groups and details exactly as provided by the capability, including member paths or sizes only when present. Mark omitted details as unavailable. Do not infer duplicates from similar names. Change nothing.'
 ```
 
-Use only the returned groups. If the scan returns no groups, report that no duplicate groups were found and do not propose duplicate-based tags.
+Use only the returned groups. If the scan returns no groups, report that no duplicate groups were found and do not propose duplicate-based tags. If the returned group lacks member paths, do not propose tagging its members.
 
 ## Step 4 — Extract document facts
 
@@ -76,14 +84,14 @@ Use the layout in [references/review-format.md](references/review-format.md). In
 - the proposed tag for each file, with a short reason for each, or no change;
 - an explicit list of the tag and file pairs waiting for approval.
 
-Ask the user to approve or reject specific tag and file pairs. Wait for the answer. This is a `waiting_user` state, and no change may be made while it is open.
+Ask the user to approve or reject specific tag and file pairs. If the tag does not exist, explicitly include tag creation in the approval request (for example, “Create the `Project-A` tag if needed and apply it to these two files?”). Wait for the answer. This is a `waiting_user` state, and no change may be made while it is open.
 
 ## Step 6 — Apply approved tags
 
 Run this step only for tags the user approved. Delegate to `file-agent` with the exact approved paths and tag names.
 
 ```
-delegate --target file-agent --instruction 'Apply the approved tags to the exact approved file paths. Reuse an existing tag with the approved name, or create that tag first if it does not exist, then attach it to the approved paths. Apply only the approved file and tag pairs, and report the outcome for each file, including failures.'
+delegate --target file-agent --instruction 'Apply only the approved tag name and exact approved file paths from the user's approval reply. Resolve the name with the registered tag lookup. If no tag exists, create it only if the user explicitly approved creation as part of this action; otherwise stop and ask. Then attach it to only the approved paths. Respect each platform approval gate and report the result for each file, including failures.'
 ```
 
 If the child expert reports `waiting_approval`, stop and tell the user which tag actions are pending. Do not repeat the request.
@@ -112,6 +120,7 @@ If some files are unreadable, some documents cannot be extracted, or only part o
 
 # Generation-time capability evidence
 
+- `file-workflow` → `file-agent`
 - `ug-filesystem` → `file-agent`
 - `ug-filemgr` → `file-agent`
 - `ug-document` → `document-agent`
@@ -120,4 +129,6 @@ If some files are unreadable, some documents cannot be extracted, or only part o
 
 This Skill orchestrates catalog capabilities through registered experts only. It adds no deletion, move, compression, background scheduling, whole-NAS scanning, streaming, sharing, database hosting, or custom interfaces. Moving or archiving files is deferred until the file move workflow can be validated on a NAS. Local static checks do not prove installation, compatibility, or device runtime behavior.
 
-Built with the UGREEN Uliya Skill Creation Tool (kit version 0.7.3) and the OpenCode AI coding assistant. No third-party components are bundled with this Skill.
+See [development and component disclosures](references/disclosures.md) for the functionality created, tools used, sources, licenses, and runtime data-flow boundary.
+
+Built with the UGREEN Uliya Skill Creation Tool (kit version 0.7.3), OpenCode, and OpenAI Codex. OpenCode was used during initial drafting; Codex was used to review and revise the Skill and submission documents. No third-party code or libraries are bundled with this Skill.

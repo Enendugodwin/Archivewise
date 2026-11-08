@@ -1,4 +1,4 @@
-﻿{
+{
   "checkFormatVersion": "2.0.0",
   "status": "static-pass",
   "target": {
@@ -9,12 +9,16 @@
   },
   "files": [
     {
+      "path": "references/disclosures.md",
+      "sha256": "b11045bdbf37ad1ad9e7bd5b0b8ea762e9a3d11296fdcbe41ead53d45a14887e"
+    },
+    {
       "path": "references/review-format.md",
-      "sha256": "2ae0ff78eb9785ddca770190154d95f5580f334a6ab8fea4157b1def7d7b014d"
+      "sha256": "3128e64893d191ef7156e37ea92d0f018ff98047d796254d432286cb38cfb811"
     },
     {
       "path": "SKILL.md",
-      "sha256": "a5bfc0ad0344891518157922dde20265cc7062552babd595b9fe000a7e63f322"
+      "sha256": "066bfb9397838dbaaf505dbecf9487631200c09f5f36ee7b320d10729a6a849c"
     }
   ],
   "summary": {

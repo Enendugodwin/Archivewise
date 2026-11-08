@@ -26,7 +26,7 @@ Home and small-team NAS users accumulate duplicate files and old documents in fo
 
 | Input | Required | Behavior when missing |
 |---|---|---|
-| Folder to review | Yes | Ask for it; never substitute a default, parent, or wider area. |
+| Folder to review | Yes | Accept a NAS path or relative folder; resolve relative names only under the user directory. Ask if missing; never substitute a parent or wider area. |
 | Purpose (duplicates, documents, or both) | Yes | Ask one focused question; default to duplicate review only after the user answers. |
 | Document fields or question | Only for document review | Use `auto` schema and the common fields: type, date, project, status. |
 | Explicit approval | Before any tag | Show exact files and tag names, then wait. |
@@ -38,7 +38,7 @@ Do not ask for CLI names, tag identifiers, or other values the child experts res
 1. Work only inside the confirmed folder and on files observed in the listing.
 2. Accept a duplicate group only from the NAS duplicate scan; never from names, sizes, or dates alone.
 3. Preserve every reviewed file. No move, deletion, replacement, or rename.
-4. Read first; write only after explicit approval of named tag and file pairs.
+4. Read first; write only after explicit approval of named tag and file pairs. If creation of a new tag is needed, name that in the approval request too.
 5. Report `waiting_user`, `waiting_approval`, `completed`, `failed`, and `cancelled` accurately.
 6. Disclose inaccessible files and failed extractions; do not guess.
 7. Do not compute a storage-savings total from unverified data.

@@ -33,7 +33,7 @@ ArchiveWise should make cleanup easier to understand and safer to carry out. It 
 ### Out of scope for Round 1
 
 - Compression, decompression, deletion, automatic cleanup, background scheduling, or whole-NAS scans.
-- Storage savings promises. The catalog includes size filtering and file metadata operations, but ArchiveWise will only report a numeric total if the exact results support a correct calculation.
+- Storage-savings estimates or totals. This version reports only duplicate details actually returned and does not calculate space recovered.
 - Streaming, public link creation, database hosting, custom web/mobile interfaces, external services, and unsupported scripts.
 - Claiming runtime or NAS testing before finalists receive device access.
 
@@ -45,11 +45,11 @@ Use the downloaded package's `data/capability-catalog.json` as the source of tru
 
 | Workflow step | Catalog capability | Expert | Use |
 |---|---|---|---|
-| Inspect/search the user-selected folder | `ug-filesystem` (`ls`, `find`, optionally `stat`) | `file-agent` | Read-only listing and scoped search; pass the exact folder and filters. |
+| Resolve a relative folder (when supplied) | `file-workflow` (`get-user-dir`) | `file-agent` | Read the actual user directory, resolve only beneath it, and verify the exact candidate path. |
+| Inspect/search the user-selected folder | `ug-filesystem` (`ls`, `find`, `stat`) | `file-agent` | Read-only listing and scoped search; pass the exact folder and filters. |
 | Detect duplicates | `ug-filemgr` (`scan-dedupe`) | `file-agent` | Read-only scan in the selected scope; display only returned groups. |
 | Extract document facts | `ug-document` (`extract` or `qa`) | `document-agent` | Read-only extraction with a user-defined query/schema and source evidence. |
 | Add an approved tag | `ug-filemgr` (`tag-add-file`) | `file-agent` | State-changing; requires the catalog's conditional approval workflow. |
- |
 
 Before authoring, verify exact parameters, action effects, approval values, return evidence, and prerequisites for every selected action in the catalog. If a required action is unavailable or unclear, remove it from the MVP rather than inventing support. The parent Skill must delegate through `delegate --target <agent-id> --instruction '<self-contained task>'`; it must not directly invoke NAS CLIs.
 
@@ -58,7 +58,7 @@ Record the mappings in the generated Skill as required by the kit:
 - `ug-filesystem` -> `file-agent`
 - `ug-filemgr` -> `file-agent`
 - `ug-document` -> `document-agent`
-- `file-workflow` -> `file-agent`
+- `file-workflow` -> `file-agent` (only `get-user-dir`; move actions remain excluded)
 
 ## 5. User flow and safety rules
 

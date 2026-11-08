@@ -2,13 +2,13 @@
 
 **UGREEN NAS Skill Hackathon 2026 · Track: Automate Your Workflow**  
 **Round 1 submission · Project Proposal (PDF)**  
-**Ten substantive answers: 455 words (limit: 500)**  
+**Ten substantive answers: 445 words (limit: 500)**
 
 ---
 
 ## 1. One sentence: What does the Skill do?
 
-ArchiveWise reviews one NAS folder, shows the duplicate groups and document facts it can prove, and, only after explicit approval, tags selected files.
+ArchiveWise reviews one NAS folder, reports duplicate scan results and requested document facts with source evidence, and tags selected files only after explicit approval.
 
 ## 2. Who is the target user and problem?
 
@@ -24,27 +24,27 @@ The user names a folder and goal. ArchiveWise confirms the folder, purpose, and 
 
 ## 5. What substantive difference does your idea offer compared with existing tools or conventional AI solutions?
 
-Dedupe utilities pick a keeper and push deletion; assistants cannot safely act on NAS files. ArchiveWise keeps the decision with the user and ties every recommendation to a NAS result. It preserves every file, never deletes or moves, and reports partial outcomes honestly. It unites duplicate review, document understanding, and approved tagging.
+Existing NAS file tools can list and detect duplicates. ArchiveWise adds one guided, folder-scoped review that combines returned duplicate results with source-backed document details before it proposes tags. It preserves all files, requires approval for the exact tag and files, and reports partial results honestly.
 
 ## 6. Which UGREEN AI NAS capabilities will be used, and at which step in the workflow?
 
-Step 2: ug-filesystem (ls, find, stat) lists the scoped folder. Step 3: ug-filemgr (scan-dedupe) returns duplicate groups. Step 4: ug-document (extract, qa) extracts document facts with source evidence. Step 6: ug-filemgr (tag-get-by-name, tag-add, tag-add-file) applies approved tags.
+Step 1: file-workflow (get-user-dir) resolves relative folder names. Step 2: ug-filesystem (ls, find, stat) verifies and lists the scope. Step 3: ug-filemgr (scan-dedupe) finds duplicates. Step 4: ug-document (extract, qa) extracts sourced facts. Step 6: ug-filemgr (tag-list, tag-get-by-name, tag-add, tag-add-file) looks up and applies tags after explicit approval, including approval to create a new tag if needed.
 
 ## 7. What was your technical approach? Describe the planned Skill workflow, supported NAS CLI capabilities, expert agent orchestration, required inputs, permissions, AI model choices, and data handling, as applicable;
 
-ArchiveWise is orchestration-only. SKILL.md delegates self-contained tasks to file-agent and document-agent; it never invokes NAS CLIs directly. Reads precede writes, and only real returned paths flow to extraction. Catalog approvals and permissions are respected; a pending gate is reported as waiting_approval, not assumed. Document understanding uses the NAS document capability and local AI; the Skill adds no external service, upload, or credential, and content stays local.
+ArchiveWise is orchestration-only. SKILL.md delegates scoped tasks to file-agent and document-agent; it does not invoke NAS CLIs directly. Read steps pass real returned paths to later steps. Writes require explicit user approval and UGREEN approval gates. Model use is provided by UGREEN experts; the Skill adds no external model, service, or credential.
 
 ## 8. What is the current development status? Identify what was implemented already, not yet implemented, or is pending NAS validation if selected to be a Finalist.
 
-Implemented: the complete Skill package, catalog mapping for three CLIs, the review template, three case definitions, and a clean bundled checker run. The Round 1 scope is fully implemented. Pending NAS validation: duplicate-group shape, tag idempotency, and approval timing. File moves are deferred.
+Implemented: the pre-test Skill package, four-CLI mapping, review template, core cases, and a clean static-checker run. NAS validation remains for duplicate-result details, relative-path resolution, tag behavior, and approvals. File moves are deferred.
 
 ## 9. What is your final validation plan? Name two core test cases and one edge case to validate if selected as a Finalist.
 
-Core one: a folder with known duplicates must report only returned groups and change nothing before approval. Core two: sample project documents must yield fields with source names, and only approved files receive the proposed tag. Edge case: one unreadable file and one unextractable document must be disclosed, and dependent actions must stop.
+Core one: report only duplicate groups returned for a test folder; change nothing before approval. Core two: extract sourced fields from sample documents and tag only approved files. Edge case: disclose an unreadable file and failed extraction; stop actions that depend on missing evidence.
 
 ## 10. Are there any known limitations of your Project? Describe current known limitations, technical risks, and any external dependencies.
 
-Round 1 is statically validated, without NAS runtime evidence. Users choose the keeper. Extraction quality depends on NAS document support and file legibility. Tag creation and application depend on platform approvals. Moving or archiving files is deferred, and the Skill does not delete, compress, schedule, or scan the whole NAS.
+Round 1 is statically validated, without NAS runtime evidence. Duplicate-group details may vary by NAS result; ArchiveWise does not decide which copy to keep. Extraction quality depends on document support and file legibility. Tag creation and application depend on platform approvals. Moving or archiving files is deferred, and the Skill does not delete, compress, schedule, or scan the whole NAS.
 
 ---
 
@@ -53,6 +53,7 @@ Round 1 is statically validated, without NAS runtime evidence. Users choose the 
 *Excluded from the 500-word limit, per the Official Rules.*
 
 - **UGREEN Uliya Skill Creation Tool, kit version 0.7.3.** Provided by UGREEN with the Hackathon Starter Kit (https://ai.ugreen.com/pages/hackathon-starter-kit). Used to structure the Skill and run the bundled static checker. Used under the UGREEN Hackathon developer package terms.
-- **OpenCode AI coding assistant.** Source: https://github.com/sst/opencode. License: MIT. Used for drafting the Skill, reviewing catalog mappings, and running the local static checker.
+- **OpenCode AI coding assistant.** Source: https://github.com/sst/opencode. License: MIT. Used during initial Skill drafting and catalog review.
+- **OpenAI Codex.** Source: https://openai.com/codex/. Used in this session to review and revise the Skill and submission documents. No OpenAI code, SDK, API, or model is bundled.
 - **Bundled third-party material.** No third-party SDKs, libraries, model weights, or datasets are bundled in the Skill package.
-- **External services and data flows.** The Skill adds none. It delegates only to registered NAS experts and adds no network call, telemetry, credential, or API key. Document understanding uses the NAS document capability and local AI model; folder content remains on the NAS.
+- **External services and data flows.** The Skill defines no external service integration, API, or telemetry. It delegates authorized NAS operations to UGREEN's registered experts. Model selection and runtime data handling are provided by that environment and require NAS validation. No credentials or API keys are included.

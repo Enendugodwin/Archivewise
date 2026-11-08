@@ -1,6 +1,6 @@
-# Manual walkthrough — 2026-11-12
+# Planned manual walkthrough — 2026-11-12
 
-Walkthrough of `archivewise/SKILL.md` against catalog version 2.0.0. This is a paper review of the written workflow, not NAS runtime testing. It reflects the current build decision in `build.md`: tags only, no file moves.
+This walkthrough was drafted on 2026-11-08 for a planned review on 2026-11-12. It has not yet been performed; all example NAS outputs below are hypothetical. It is a paper review of `archivewise/SKILL.md` against catalog version 2.0.0, not NAS runtime testing. It reflects the current build decision in `build.md`: tags only, no file moves.
 
 ## Delegation map check
 
@@ -80,7 +80,7 @@ All four delegations resolve to a registered agent. Reads precede writes. No del
 | "Make a share link." | Unsupported in this scope. |
 | "Clean up everything." | Treat as a request for a review of a named folder, not as approval for any tag change. |
 
-## Issues found and fixed
+## Authoring issues corrected before the planned walkthrough
 
 1. **Archive moves were removed from the build.** The plan now says the first version tags only. Steps 5, 7, and 8 from the earlier draft were removed, and `file-workflow` was dropped from the capability evidence.
 2. **Relative folder names were underspecified.** Step 2 resolves a relative name inside the user directory and returns the resolved path; later steps use that real path.
