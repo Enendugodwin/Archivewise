@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ArchiveWise — Local Preview</title>
+<style>
+  :root {
+    --bg: #f3f6f3;
+    --surface: #ffffff;
+    --surface-2: #f7faf8;
+    --ink: #16241e;
+    --muted: #5f7168;
+    --line: #dfe7e2;
+    --accent: #176b52;
+    --accent-2: #0f513d;
+    --accent-soft: #e4f1ea;
+    --amber: #8a5300;
+    --amber-soft: #fdf3e2;
+    --danger: #a33a3a;
+    --danger-soft: #fbeaea;
+    --shadow: 0 1px 2px rgba(16, 40, 32, .05), 0 12px 32px rgba(16, 40, 32, .05);
+    --radius: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(900px 420px at 12% -8%, #e6f2ec 0%, rgba(230, 242, 236, 0) 62%),
+      var(--bg);
+    color: var(--ink);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  .mono { font-family: "Cascadia Code", Consolas, "SFMono-Regular", monospace; }
+  .shell { max-width: 1180px; margin: 0 auto; padding: 26px 24px 130px; }
+
+  header.top {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 18px; margin-bottom: 22px;
+  }
+  .brand { display: flex; align-items: center; gap: 13px; min-width: 0; }
+  .mark {
+    width: 46px; height: 46px; flex: 0 0 46px; border-radius: 13px;
+    display: grid; place-items: center; color: #fff;
+    background: linear-gradient(150deg, #1c7d61, #0e4b39);
+    box-shadow: 0 6px 16px rgba(15, 81, 61, .22);
+  }
+  .brand h1 { margin: 0; font-size: 21px; letter-spacing: -.02em; line-height: 1.15; }
+  .brand p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 7px 12px; border-radius: 999px;
+    background: var(--amber-soft); color: var(--amber);
+    border: 1px solid #f0ddbc; font-size: 12.5px; font-weight: 600;
+    white-space: nowrap;
+  }
+  .badge .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+  }
+  .folder-card { padding: 18px 20px 20px; margin-bottom: 16px; }
+  .folder-card label { display: block; font-weight: 650; font-size: 13px; margin-bottom: 7px; }
+  .folder-row { display: flex; gap: 9px; align-items: stretch; }
+  .folder-row input {
+    flex: 1 1 auto; min-width: 0; height: 44px; padding: 0 13px;
+    border: 1px solid #cfdad4; border-radius: 10px; background: #fff;
+    color: var(--ink); font: 13.5px/1.4 "Cascadia Code", Consolas, monospace;
+  }
+  .folder-row input:focus-visible { outline: 3px solid #b9dfcf; outline-offset: 1px; border-color: var(--accent); }
+  button { font: inherit; cursor: pointer; border-radius: 10px; border: 1px solid transparent; }
+  button:focus-visible { outline: 3px solid #b9dfcf; outline-offset: 2px; }
+  .btn {
+    height: 44px; padding: 0 16px; font-weight: 650; font-size: 13.5px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    white-space: nowrap; transition: background .15s ease, border-color .15s ease, transform .05s ease;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn.primary { background: var(--accent); color: #fff; box-shadow: 0 4px 12px rgba(23, 107, 82, .18); }
+  .btn.primary:hover { background: var(--accent-2); }
+  .btn.primary:disabled { background: #a8bcb4; box-shadow: none; cursor: not-allowed; }
+  .btn.ghost { background: #fff; border-color: #cfdad4; color: var(--ink); }
+  .btn.ghost:hover { background: var(--surface-2); border-color: #b9c9c1; }
+  .hint { margin: 9px 0 0; color: var(--muted); font-size: 12.5px; }
+  .hint code { font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; }
+
+  #loading { height: 3px; margin: 0 0 14px; border-radius: 3px; overflow: hidden; background: #e3ebe7; display: none; }
+  #loading.on { display: block; }
+  #loading::after {
+    content: ""; display: block; width: 38%; height: 100%; background: var(--accent); border-radius: 3px;
+    animation: slide 1s ease-in-out infinite;
+  }
+  @keyframes slide { 0% { transform: translateX(-110%); } 100% { transform: translateX(360%); } }
+
+  .stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
+  .stat { padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 13px; }
+  .stat .k { color: var(--muted); font-size: 11.5px; font-weight: 650; text-transform: uppercase; letter-spacing: .06em; }
+  .stat .v { font-size: 25px; font-weight: 750; letter-spacing: -.03em; line-height: 1.15; margin-top: 3px; }
+  .stat.hot .v { color: var(--accent); }
+  .stat.warn .v { color: var(--amber); }
+
+  .grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(330px, .9fr); gap: 18px; align-items: start; }
+  .col { display: grid; gap: 18px; min-width: 0; }
+  .panel { padding: 20px; }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+  .panel-head h2 { margin: 0; font-size: 15.5px; letter-spacing: -.01em; display: flex; align-items: center; gap: 8px; }
+  .panel-head h2 svg { color: var(--accent); }
+  .count-pill {
+    display: inline-flex; min-width: 24px; height: 22px; padding: 0 7px; align-items: center; justify-content: center;
+    border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); color: var(--muted);
+    font-size: 12px; font-weight: 650;
+  }
+  .selectall { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12.5px; font-weight: 600; cursor: pointer; }
+  .selectall input { accent-color: var(--accent); width: 15px; height: 15px; }
+
+  .dup {
+    background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px;
+    padding: 13px 14px; margin-bottom: 10px;
+  }
+  .dup:last-child { margin-bottom: 0; }
+  .dup-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .dup-title { font-weight: 700; font-size: 13.5px; }
+  .dup-size { color: var(--muted); font-size: 12.5px; }
+  .dup-hash { margin: 3px 0 8px; color: #7d8f86; font-size: 11.5px; overflow-wrap: anywhere; }
+  .file-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
+  .file-list li { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 13px; }
+  .file-list svg { flex: 0 0 auto; color: #8fa39a; }
+  .file-list span { overflow-wrap: anywhere; }
+
+  .table-wrap { overflow-x: auto; margin: 0 -4px; padding: 0 4px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 650px; }
+  th {
+    text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); font-weight: 700; padding: 0 10px 8px 0; border-bottom: 1px solid var(--line);
+  }
+  td { padding: 10px 10px 10px 0; border-bottom: 1px solid #edf2ef; vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  td.file { font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; overflow-wrap: anywhere; min-width: 150px; }
+  td.evidence { color: var(--muted); font-size: 12px; font-style: italic; max-width: 220px; }
+  .missing { color: #9aa9a2; }
+  .chip {
+    display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 650;
+    background: var(--surface-2); border: 1px solid var(--line); color: #41554b; white-space: nowrap;
+  }
+  .chip.ok { background: var(--accent-soft); border-color: #c6e2d6; color: var(--accent-2); }
+
+  .tag-list { display: grid; gap: 8px; }
+  .tag-row {
+    display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 11px;
+    padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: #fff;
+    cursor: pointer; transition: background .12s ease, border-color .12s ease;
+  }
+  .tag-row:hover { background: var(--surface-2); }
+  .tag-row:has(input:checked) { background: #f1f8f4; border-color: #b7dccb; }
+  .tag-row input { width: 16px; height: 16px; margin: 3px 0 0; accent-color: var(--accent); }
+  .tag-main { min-width: 0; }
+  .tag-file { display: block; font-family: "Cascadia Code", Consolas, monospace; font-size: 11.8px; overflow-wrap: anywhere; }
+  .tag-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+  .tag-pill {
+    display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px;
+    background: var(--accent-soft); color: var(--accent-2); font-size: 11.8px; font-weight: 700;
+  }
+  .tag-reason { color: var(--muted); font-size: 11.8px; }
+  .tag-row.applied { background: #f1f8f4; border-color: #b7dccb; box-shadow: inset 3px 0 0 var(--accent); }
+  .untagged { margin-top: 13px; padding-top: 12px; border-top: 1px dashed var(--line); }
+  .untagged .k { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .untagged ul { margin: 6px 0 0; padding-left: 18px; color: var(--muted); font-size: 12.2px; }
+  .untagged li { margin: 2px 0; overflow-wrap: anywhere; }
+
+  .unresolved-list { display: grid; gap: 7px; }
+  .unresolved-item { display: flex; gap: 9px; align-items: flex-start; padding: 9px 11px; border-radius: 10px; background: var(--amber-soft); border: 1px solid #f0ddbc; }
+  .unresolved-item svg { flex: 0 0 auto; color: var(--amber); margin-top: 2px; }
+  .unresolved-item .f { font-family: "Cascadia Code", Consolas, monospace; font-size: 11.6px; overflow-wrap: anywhere; }
+  .unresolved-item .r { color: #7b5a2a; font-size: 11.6px; }
+
+  .empty-state { padding: 38px 22px; text-align: center; color: var(--muted); }
+  .empty-state svg { color: #a9b9b1; margin-bottom: 8px; }
+  .empty-state h3 { margin: 0 0 4px; color: var(--ink); font-size: 15.5px; }
+  .banner { padding: 12px 14px; border-radius: 12px; margin-bottom: 14px; font-size: 13px; display: none; }
+  .banner.on { display: block; }
+  .banner.error { background: var(--danger-soft); border: 1px solid #f0c9c9; color: #7d2b2b; }
+  .banner.result { background: var(--accent-soft); border: 1px solid #c6e2d6; color: var(--accent-2); }
+  .banner .mono { font-size: 11.8px; overflow-wrap: anywhere; }
+
+  .actionbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+    background: rgba(255, 255, 255, .93); border-top: 1px solid var(--line);
+    backdrop-filter: blur(10px); display: none;
+  }
+  .actionbar.on { display: block; }
+  .actionbar-inner {
+    max-width: 1180px; margin: 0 auto; padding: 13px 24px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  .actionbar .summary { font-size: 13.5px; color: var(--muted); }
+  .actionbar .summary strong { color: var(--ink); font-size: 15px; }
+  .actionbar .actions { display: flex; gap: 9px; }
+  footer { margin-top: 24px; color: #85958d; font-size: 11.8px; text-align: center; }
+
+  @media (max-width: 980px) {
+    .grid { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .panel { padding: 17px; }
+  }
+  @media (max-width: 680px) {
+    .shell { padding: 18px 14px 140px; }
+    header.top { align-items: flex-start; flex-direction: column; gap: 10px; }
+    .badge { align-self: flex-start; }
+    .folder-row { flex-wrap: wrap; }
+    .folder-row input { flex-basis: 100%; }
+    .folder-row .btn { flex: 1 1 auto; }
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .actionbar-inner { flex-direction: column; align-items: stretch; gap: 9px; padding: 11px 14px; }
+    .actionbar .actions { display: grid; grid-template-columns: 1fr 1.4fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <div class="brand">
+      <div class="mark" aria-hidden="true">
+        <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3.5 7.5h17v11a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-11Z"/>
+          <path d="M2.5 4.5h19v3h-19z"/>
+          <path d="M10 12h4"/>
+        </svg>
+      </div>
+      <div>
+        <h1>ArchiveWise</h1>
+        <p>Review a folder before you change it</p>
+      </div>
+    </div>
+    <span class="badge"><span class="dot"></span>Local simulation · not the NAS runtime</span>
+  </header>
+
+  <section class="card folder-card" aria-labelledby="folder-label">
+    <form id="folder-form">
+      <label id="folder-label" for="folder">Folder to review</label>
+      <div class="folder-row">
+        <input id="folder" name="folder" type="text" autocomplete="off" spellcheck="false" placeholder="C:\Users\you\Downloads\2026-Projects">
+        <button type="button" class="btn ghost" id="browse">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
+          Browse
+        </button>
+        <button type="submit" class="btn primary" id="analyze">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+          Analyze
+        </button>
+      </div>
+      <p class="hint">Try the sample folder or paste any local path. Files are never changed until you approve a tag.</p>
+    </form>
+  </section>
+
+  <div id="loading" aria-hidden="true"></div>
+  <div id="error" class="banner error" role="alert"></div>
+
+  <section id="summary" class="stats" aria-label="Review summary" hidden>
+    <div class="stat"><div class="k">Files</div><div class="v" id="stat-files">0</div></div>
+    <div class="stat"><div class="k">Duplicate groups</div><div class="v" id="stat-groups">0</div></div>
+    <div class="stat"><div class="k">Documents</div><div class="v" id="stat-docs">0</div></div>
+    <div class="stat hot"><div class="k">Proposed tags</div><div class="v" id="stat-tags">0</div></div>
+    <div class="stat warn"><div class="k">Needs attention</div><div class="v" id="stat-attn">0</div></div>
+  </section>
+
+  <div id="content" class="grid" hidden>
+    <div class="col">
+      <section class="card panel" aria-labelledby="dupes-title">
+        <div class="panel-head">
+          <h2 id="dupes-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
+            Duplicate groups
+          </h2>
+          <span class="count-pill" id="dupes-count">0</span>
+        </div>
+        <div id="dupes"></div>
+      </section>
+
+      <section class="card panel" aria-labelledby="findings-title">
+        <div class="panel-head">
+          <h2 id="findings-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2.8h8l4 4v14.4H6z"/><path d="M14 2.8v4h4"/><path d="M9 12h6M9 15.5h6"/></svg>
+            Document findings
+          </h2>
+          <span class="count-pill" id="findings-count">0</span>
+        </div>
+        <div id="findings"></div>
+      </section>
+    </div>
+
+    <div class="col">
+      <section class="card panel" aria-labelledby="tags-title">
+        <div class="panel-head">
+          <h2 id="tags-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 13.2 12.8 21 3 11.2V3h8.2l9.3 9.3a1.3 1.3 0 0 1 0 .9Z"/><circle cx="7.5" cy="7.5" r="1.1"/></svg>
+            Proposed tags
+          </h2>
+          <label class="selectall" id="selectall-wrap" hidden>
+            <input type="checkbox" id="selectall"> All
+          </label>
+        </div>
+        <div id="result" class="banner result" role="status"></div>
+        <div id="tags"></div>
+        <div id="untagged"></div>
+      </section>
+
+      <section class="card panel" aria-labelledby="unresolved-title">
+        <div class="panel-head">
+          <h2 id="unresolved-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5"/><circle cx="12" cy="17.2" r=".7" fill="currentColor" stroke="none"/></svg>
+            Needs attention
+          </h2>
+          <span class="count-pill" id="attn-count">0</span>
+        </div>
+        <div id="unresolved"></div>
+      </section>
+    </div>
+  </div>
+
+  <section id="empty" class="card empty-state" hidden>
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
+    <h3>No matching items</h3>
+    <p>No files were found in that folder. Nothing was changed.</p>
+  </section>
+
+  <footer>
+    Local simulation · Reviewed files are never modified · Approved tags are recorded in <span class="mono">archivewise-tags.json</span> · The submitted Skill runs on UGREEN NAS
+  </footer>
+</div>
+
+<div id="actionbar" class="actionbar">
+  <div class="actionbar-inner">
+    <div class="summary"><strong id="selected-count">0</strong> of <span id="total-count">0</span> tags selected</div>
+    <div class="actions">
+      <button type="button" class="btn ghost" id="clear">Clear</button>
+      <button type="button" class="btn primary" id="approve" disabled>Approve selected</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const $ = (selector) => document.querySelector(selector);
+  const state = { data: null, selected: new Set(), applied: false, busy: false };
+
+  const icons = {
+    file: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 2.8h8l4 4v14.4H6z"/><path d="M14 2.8v4h4"/></svg>',
+    alert: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5"/><circle cx="12" cy="17.2" r=".7" fill="currentColor" stroke="none"/></svg>'
+  };
+
+  function esc(value) {
+    return String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[ch]));
+  }
+
+  function fmtSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KiB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MiB';
+  }
+
+  function setBusy(busy) {
+    state.busy = busy;
+    $('#loading').classList.toggle('on', busy);
+    $('#analyze').disabled = busy;
+    $('#browse').disabled = busy;
+    $('#analyze').textContent = busy ? 'Analyzing…' : 'Analyze';
+    if (!busy) {
+      $('#analyze').innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg> Analyze';
+    }
+  }
+
+  function showError(message) {
+    const box = $('#error');
+    box.textContent = message;
+    box.classList.toggle('on', Boolean(message));
+  }
+
+  async function load(folder) {
+    if (state.busy) return;
+    setBusy(true);
+    showError('');
+    $('#result').classList.remove('on');
+    state.applied = false;
+    try {
+      const response = await fetch('/api/review?folder=' + encodeURIComponent(folder || ''));
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Could not read that folder.');
+      state.data = data;
+      state.selected.clear();
+      $('#selectall').disabled = false;
+      $('#selectall').checked = false;
+      $('#clear').disabled = false;
+      if (!folder) $('#folder').value = data.folder;
+      render(data);
+    } catch (error) {
+      showError(error.message || String(error));
+      $('#summary').hidden = true;
+      $('#content').hidden = true;
+      $('#actionbar').classList.remove('on');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function render(data) {
+    $('#folder').value = data.folder;
+    const hasFiles = data.files > 0;
+    $('#summary').hidden = !hasFiles;
+    $('#content').hidden = !hasFiles;
+    $('#empty').hidden = hasFiles;
+    $('#actionbar').classList.toggle('on', hasFiles && data.proposals.length > 0);
+    if (!hasFiles) return;
+
+    $('#stat-files').textContent = data.files;
+    $('#stat-groups').textContent = data.groups.length;
+    $('#stat-docs').textContent = data.findings.length;
+    $('#stat-tags').textContent = data.proposals.length;
+    $('#stat-attn').textContent = data.skipped.length;
+    $('#dupes-count').textContent = data.groups.length;
+    $('#findings-count').textContent = data.findings.length;
+    $('#attn-count').textContent = data.skipped.length;
+    $('#total-count').textContent = data.proposals.length;
+
+    renderGroups(data.groups);
+    renderFindings(data.findings);
+    renderTags(data.proposals, data.untagged);
+    renderUnresolved(data.skipped);
+    updateSelection();
+  }
+
+  function renderGroups(groups) {
+    const root = $('#dupes');
+    if (!groups.length) {
+      root.innerHTML = '<p class="hint">No duplicate groups were returned for this folder.</p>';
+      return;
+    }
+    root.innerHTML = groups.map((group, index) => `
+      <article class="dup">
+        <div class="dup-top">
+          <span class="dup-title">Group ${index + 1}</span>
+          <span class="dup-size">${esc(fmtSize(group.size))} each</span>
+        </div>
+        <p class="dup-hash mono">sha256 ${esc(group.hash.slice(0, 20))}…</p>
+        <ul class="file-list">
+          ${group.members.map((member) => `<li>${icons.file}<span class="mono">${esc(member)}</span></li>`).join('')}
+        </ul>
+      </article>`).join('');
+  }
+
+  function renderFindings(findings) {
+    const root = $('#findings');
+    if (!findings.length) {
+      root.innerHTML = '<p class="hint">No text documents were found, so no fields were extracted.</p>';
+      return;
+    }
+    const dash = (value) => value ? esc(value) : '<span class="missing">—</span>';
+    root.innerHTML = `
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>File</th><th>Type</th><th>Date</th><th>Project</th><th>Status</th><th>Evidence</th></tr></thead>
+          <tbody>
+            ${findings.map((item) => `
+              <tr>
+                <td class="file">${esc(item.file)}</td>
+                <td>${dash(item.fields.type)}</td>
+                <td>${dash(item.fields.date)}</td>
+                <td>${dash(item.fields.project)}</td>
+                <td>${dash(item.fields.status)}</td>
+                <td class="evidence">${esc(item.excerpt)}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
+  function renderTags(proposals, untagged) {
+    const root = $('#tags');
+    const selectWrap = $('#selectall-wrap');
+    if (!proposals.length) {
+      root.innerHTML = '<p class="hint">No tag is proposed; nothing has enough project evidence.</p>';
+      selectWrap.hidden = true;
+    } else {
+      selectWrap.hidden = false;
+      root.innerHTML = '<div class="tag-list">' + proposals.map((item) => `
+        <label class="tag-row" data-row="${item.id}">
+          <input type="checkbox" class="tag-check" data-id="${item.id}" aria-label="Approve ${esc(item.tag)} for ${esc(item.file)}">
+          <span class="tag-main">
+            <span class="tag-file">${esc(item.file)}</span>
+            <span class="tag-meta">
+              <span class="tag-pill">${esc(item.tag)}</span>
+              <span class="tag-reason">${esc(item.reason)}</span>
+            </span>
+          </span>
+        </label>`).join('') + '</div>';
+      root.querySelectorAll('.tag-check').forEach((checkbox) => {
+        checkbox.addEventListener('change', () => {
+          const id = Number(checkbox.dataset.id);
+          if (checkbox.checked) state.selected.add(id); else state.selected.delete(id);
+          updateSelection();
+        });
+      });
+    }
+
+    const untaggedRoot = $('#untagged');
+    if (untagged.length) {
+      untaggedRoot.innerHTML = `
+        <div class="untagged">
+          <div class="k">No tag proposed</div>
+          <ul>${untagged.map((file) => `<li class="mono">${esc(file)}</li>`).join('')}</ul>
+          <p class="hint">These files have no project field, so they stay unchanged.</p>
+        </div>`;
+    } else {
+      untaggedRoot.innerHTML = '';
+    }
+  }
+
+  function renderUnresolved(skipped) {
+    const root = $('#unresolved');
+    if (!skipped.length) {
+      root.innerHTML = '<p class="hint">Everything reviewed cleanly.</p>';
+      return;
+    }
+    root.innerHTML = '<div class="unresolved-list">' + skipped.map((item) => `
+      <div class="unresolved-item">
+        ${icons.alert}
+        <div><div class="f mono">${esc(item.file)}</div><div class="r">${esc(item.reason)}</div></div>
+      </div>`).join('') + '</div>';
+  }
+
+  function updateSelection() {
+    const total = state.data ? state.data.proposals.length : 0;
+    const count = state.selected.size;
+    $('#selected-count').textContent = count;
+    $('#total-count').textContent = total;
+    const approve = $('#approve');
+    approve.disabled = count === 0 || state.applied;
+    approve.textContent = count === 0 ? 'Approve selected' : `Approve ${count} tag${count === 1 ? '' : 's'}`;
+    const all = $('#selectall');
+    all.checked = total > 0 && count === total;
+    all.indeterminate = count > 0 && count < total;
+  }
+
+  async function approve() {
+    if (!state.data || state.selected.size === 0 || state.applied) return;
+    const button = $('#approve');
+    button.disabled = true;
+    button.textContent = 'Applying…';
+    showError('');
+    try {
+      const response = await fetch('/api/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ folder: state.data.folder, selected: [...state.selected] })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Could not apply the tags.');
+      state.applied = true;
+      const appliedFiles = new Set(data.applied.map((item) => item.file));
+      document.querySelectorAll('.tag-row').forEach((row) => {
+        const checkbox = row.querySelector('.tag-check');
+        const file = state.data.proposals.find((item) => item.id === Number(checkbox.dataset.id));
+        if (file && appliedFiles.has(file.file)) row.classList.add('applied');
+        checkbox.disabled = true;
+      });
+      $('#selectall').disabled = true;
+      $('#clear').disabled = true;
+      const result = $('#result');
+      result.innerHTML = `<strong>${data.applied.length} tag${data.applied.length === 1 ? '' : 's'} applied.</strong>
+        <div class="mono">${esc(data.tag_file)}</div>
+        ${data.failed.length ? `<div>${data.failed.length} failed. See the server output.</div>` : ''}`;
+      result.classList.add('on');
+      result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      updateSelection();
+      button.textContent = 'Applied';
+    } catch (error) {
+      showError(error.message || String(error));
+      button.disabled = false;
+      updateSelection();
+    }
+  }
+
+  $('#folder-form').addEventListener('submit', (event) => {
+    event.preventDefault();
+    load($('#folder').value.trim());
+  });
+
+  $('#browse').addEventListener('click', async () => {
+    const button = $('#browse');
+    button.disabled = true;
+    const original = button.innerHTML;
+    button.textContent = 'Opening…';
+    try {
+      const response = await fetch('/api/browse', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Folder picker unavailable.');
+      if (data.folder) {
+        $('#folder').value = data.folder;
+        await load(data.folder);
+      }
+    } catch (error) {
+      showError(error.message + ' Paste a folder path instead.');
+    } finally {
+      button.disabled = false;
+      button.innerHTML = original;
+    }
+  });
+
+  $('#selectall').addEventListener('change', (event) => {
+    if (!state.data) return;
+    state.selected.clear();
+    if (event.target.checked) state.data.proposals.forEach((item) => state.selected.add(item.id));
+    document.querySelectorAll('.tag-check').forEach((checkbox) => {
+      checkbox.checked = event.target.checked;
+    });
+    updateSelection();
+  });
+
+  $('#clear').addEventListener('click', () => {
+    state.selected.clear();
+    document.querySelectorAll('.tag-check').forEach((checkbox) => { checkbox.checked = false; });
+    updateSelection();
+  });
+
+  $('#approve').addEventListener('click', approve);
+
+  load('');
+</script>
+</body>
+</html>

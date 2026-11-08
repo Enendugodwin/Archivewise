@@ -4,21 +4,42 @@ The submitted Skill (`archivewise/`) is a Uliya orchestration package. Its real 
 
 This folder is a **local simulator** of the review and approval experience. It calls no NAS capability, and it is not part of the submitted ZIP. It exists so you can try the flow on this PC before NAS access is available.
 
-## Quick start
+## Launch the GUI
 
 ```powershell
-python demo\archivewise_demo.py
+python demo\gui_server.py
 ```
 
-The default folder is `demo/sample-folder`. The simulator shows the review and asks which proposed tags to approve.
+The browser opens at <http://127.0.0.1:8765/>.
 
-Other modes:
+1. The sample folder loads automatically.
+2. Or paste any local folder path and press **Analyze**; **Browse** opens a native folder picker.
+3. Review duplicate groups, document findings, proposed tags, and unresolved files.
+4. Tick the tags you approve and press **Approve selected**.
+5. Approved tags are recorded in `archivewise-tags.json` inside the reviewed folder.
+
+Options:
 
 ```powershell
+# Do not open a browser automatically
+python demo\gui_server.py --no-browser
+
+# Start on a different port (tries 20 ports from there)
+python demo\gui_server.py --port 9000
+```
+
+The server binds to `127.0.0.1` only. Press `Ctrl+C` to stop it.
+
+## Command line (optional)
+
+```powershell
+# Interactive review of the sample folder
+python demo\archivewise_demo.py
+
 # Review only, no changes
 python demo\archivewise_demo.py --no-input
 
-# Approve every proposed tag without prompting
+# Approve every proposal automatically
 python demo\archivewise_demo.py --approve-all
 
 # Review your own folder
@@ -34,9 +55,7 @@ python demo\archivewise_demo.py "C:\Users\user\Documents\some-folder"
 5. Asks for approval of exact file and tag pairs.
 6. Records approved tags in `archivewise-tags.json` inside the reviewed folder.
 
-It never deletes, moves, renames, or rewrites a reviewed file. Re-run it and the sidecar is skipped from the file list.
-
-Delete `archivewise-tags.json` to reset the demo.
+It never deletes, moves, renames, or rewrites a reviewed file. Re-run it and the sidecar is skipped from the file list. Delete `archivewise-tags.json` to reset.
 
 ## What the sample folder shows
 
