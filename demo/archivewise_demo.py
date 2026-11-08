@@ -11,15 +11,24 @@ the reviewed folder.
 from __future__ import annotations
 
 import argparse
+import csv
 import hashlib
+import html as html_lib
+import io
 import json
 import re
 import sys
+import zipfile
+import xml.etree.ElementTree as ET
+from datetime import date
 from pathlib import Path
 
 MAX_DEPTH = 3
 MAX_FILES = 200
-TEXT_EXTS = {".txt", ".md", ".markdown", ".csv", ".log"}
+TEXT_EXTS = {".txt", ".md", ".markdown", ".csv", ".log", ".json", ".xml", ".html", ".htm"}
+OFFICE_EXTS = {".docx", ".xlsx", ".pptx"}
+DOCUMENT_EXTS = TEXT_EXTS | OFFICE_EXTS | {".pdf", ".rtf"}
+ARCHIVE_STATUSES = {"signed", "paid", "final", "complete", "archived", "closed"}
 TAG_FILE = "archivewise-tags.json"
 FIELDS = ("type", "date", "project", "status")
 
@@ -59,13 +68,225 @@ def rel(root: Path, path: Path) -> str:
     return path.relative_to(root).as_posix()
 
 
-def extract_fields(path: Path) -> tuple[dict[str, str] | None, str | None]:
+def _safe_read_text(path: Path, encoding: str = "utf-8-sig") -> tuple[str, str | None]:
     try:
-        text = path.read_text(encoding="utf-8")
+        return path.read_text(encoding=encoding), None
     except UnicodeDecodeError:
-        return None, "not UTF-8 text (unsupported in this demo)"
+        return "", "not UTF-8 text"
     except OSError as error:
-        return None, f"unreadable: {error}"
+        return "", f"unreadable: {error}"
+
+
+def _docx_text(path: Path) -> tuple[str, str | None]:
+    try:
+        with zipfile.ZipFile(path) as archive:
+            root = ET.fromstring(archive.read("word/document.xml"))
+    except (KeyError, zipfile.BadZipFile, ET.ParseError) as error:
+        return "", f"could not read Word document: {error}"
+    lines = []
+    for paragraph in root.iter():
+        if paragraph.tag.endswith("}p"):
+            text = "".join(node.text or "" for node in paragraph.iter() if node.tag.endswith("}t"))
+            if text.strip():
+                lines.append(text.strip())
+    return "\n".join(lines), None
+
+
+def _xlsx_text(path: Path) -> tuple[str, str | None]:
+    try:
+        with zipfile.ZipFile(path) as archive:
+            names = set(archive.namelist())
+            shared: list[str] = []
+            if "xl/sharedStrings.xml" in names:
+                root = ET.fromstring(archive.read("xl/sharedStrings.xml"))
+                for item in root.iter():
+                    if item.tag.endswith("}si"):
+                        shared.append(
+                            "".join(
+                                node.text or ""
+                                for node in item.iter()
+                                if node.tag.endswith("}t")
+                            )
+                        )
+            lines: list[str] = list(shared)
+            sheets = sorted(
+                name
+                for name in names
+                if name.startswith("xl/worksheets/sheet") and name.endswith(".xml")
+            )
+            for sheet in sheets:
+                root = ET.fromstring(archive.read(sheet))
+                for cell in root.iter():
+                    if not cell.tag.endswith("}c"):
+                        continue
+                    value = None
+                    for child in cell:
+                        if child.tag.endswith("}v") and child.text is not None:
+                            value = child.text
+                        elif child.tag.endswith("}is"):
+                            value = "".join(
+                                node.text or ""
+                                for node in child.iter()
+                                if node.tag.endswith("}t")
+                            )
+                    if value is None:
+                        continue
+                    if cell.get("t") == "s":
+                        try:
+                            value = shared[int(value)]
+                        except (ValueError, IndexError):
+                            pass
+                    lines.append(value)
+    except (zipfile.BadZipFile, ET.ParseError, KeyError) as error:
+        return "", f"could not read Excel workbook: {error}"
+    return "\n".join(lines), None
+
+
+def _pptx_text(path: Path) -> tuple[str, str | None]:
+    try:
+        with zipfile.ZipFile(path) as archive:
+            slides = sorted(
+                name
+                for name in archive.namelist()
+                if name.startswith("ppt/slides/slide") and name.endswith(".xml")
+            )
+            lines: list[str] = []
+            for slide in slides:
+                root = ET.fromstring(archive.read(slide))
+                for node in root.iter():
+                    if node.tag.endswith("}t") and node.text:
+                        lines.append(node.text)
+    except (zipfile.BadZipFile, ET.ParseError) as error:
+        return "", f"could not read PowerPoint deck: {error}"
+    return "\n".join(lines), None
+
+
+def _pdf_text(path: Path) -> tuple[str, str | None]:
+    try:
+        from pypdf import PdfReader
+    except ImportError:
+        return "", "PDF extraction needs pypdf; install demo/requirements.txt"
+    try:
+        reader = PdfReader(str(path))
+        text = "\n".join((page.extract_text() or "") for page in reader.pages)
+    except Exception as error:
+        return "", f"could not read PDF: {error}"
+    if not text.strip():
+        return "", "PDF has no extractable text"
+    return text, None
+
+
+def _rtf_text(path: Path) -> tuple[str, str | None]:
+    try:
+        raw = path.read_text(encoding="latin-1", errors="replace")
+    except OSError as error:
+        return "", f"unreadable: {error}"
+    raw = re.sub(r"\\'([0-9a-fA-F]{2})", lambda match: chr(int(match.group(1), 16)), raw)
+    raw = raw.replace("\\par", "\n").replace("\\line", "\n")
+    raw = re.sub(r"\\[a-zA-Z]+-?\d* ?", " ", raw)
+    raw = raw.replace("{", "").replace("}", "")
+    return raw, None
+
+
+def _html_text(path: Path) -> tuple[str, str | None]:
+    text, error = _safe_read_text(path)
+    if error:
+        return "", error
+    text = re.sub(r"<(script|style)[^>]*>.*?</\1>", " ", text, flags=re.S | re.I)
+    text = re.sub(r"<br\s*/?>|</p>|</div>|</h[1-6]>|</li>|</tr>", "\n", text, flags=re.I)
+    text = re.sub(r"<[^>]+>", " ", text)
+    return html_lib.unescape(text), None
+
+
+def _xml_text(path: Path) -> tuple[str, str | None]:
+    text, error = _safe_read_text(path)
+    if error:
+        return "", error
+    try:
+        root = ET.fromstring(text)
+    except ET.ParseError:
+        return re.sub(r"<[^>]+>", " ", text), None
+    lines = []
+    for element in root.iter():
+        if len(element) == 0 and element.text and element.text.strip():
+            tag = element.tag.split("}")[-1]
+            lines.append(f"{tag}: {element.text.strip()}")
+    return "\n".join(lines), None
+
+
+def _json_text(path: Path) -> tuple[str, str | None]:
+    text, error = _safe_read_text(path)
+    if error:
+        return "", error
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError as error:
+        return "", f"invalid JSON: {error}"
+    lines: list[str] = []
+
+    def walk(value) -> None:
+        if isinstance(value, dict):
+            for key, item in value.items():
+                if isinstance(item, (dict, list)):
+                    walk(item)
+                else:
+                    lines.append(f"{key}: {item}")
+        elif isinstance(value, list):
+            for item in value:
+                walk(item)
+
+    walk(data)
+    return "\n".join(lines), None
+
+
+def _csv_text(path: Path) -> tuple[str, str | None]:
+    text, error = _safe_read_text(path)
+    if error:
+        return "", error
+    try:
+        rows = list(csv.reader(io.StringIO(text)))
+    except csv.Error:
+        return text, None
+    if not rows:
+        return "", None
+    header = [cell.strip() for cell in rows[0]]
+    lines = []
+    for row in rows[1:]:
+        for key, value in zip(header, row):
+            if key and value.strip():
+                lines.append(f"{key}: {value.strip()}")
+    return "\n".join(lines) or text, None
+
+
+def extract_text(path: Path) -> tuple[str, str | None]:
+    suffix = path.suffix.lower()
+    if suffix in {".html", ".htm"}:
+        return _html_text(path)
+    if suffix == ".xml":
+        return _xml_text(path)
+    if suffix == ".json":
+        return _json_text(path)
+    if suffix == ".csv":
+        return _csv_text(path)
+    if suffix == ".docx":
+        return _docx_text(path)
+    if suffix == ".xlsx":
+        return _xlsx_text(path)
+    if suffix == ".pptx":
+        return _pptx_text(path)
+    if suffix == ".pdf":
+        return _pdf_text(path)
+    if suffix == ".rtf":
+        return _rtf_text(path)
+    if suffix in TEXT_EXTS:
+        return _safe_read_text(path)
+    return "", f"not a supported document format ({suffix or 'no extension'})"
+
+
+def extract_fields(path: Path) -> tuple[dict[str, str] | None, str | None]:
+    text, error = extract_text(path)
+    if error:
+        return None, error
     found: dict[str, str] = {}
     for key in FIELDS:
         match = re.search(rf"(?im)^\s*{key}\s*:\s*(.+?)\s*$", text)
@@ -75,15 +296,63 @@ def extract_fields(path: Path) -> tuple[dict[str, str] | None, str | None]:
 
 
 def evidence_excerpt(path: Path, limit: int = 90) -> str:
-    try:
-        text = path.read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError):
+    text, error = extract_text(path)
+    if error:
         return "not available"
     for line in text.splitlines():
         line = line.strip()
         if line:
             return line if len(line) <= limit else line[: limit - 1] + "..."
-    return "empty file"
+    return "empty document"
+
+
+def review_file(path: Path) -> dict:
+    if path.suffix.lower() not in DOCUMENT_EXTS:
+        return {
+            "supported": False,
+            "fields": {},
+            "excerpt": "",
+            "error": "not a supported document format",
+        }
+    fields, error = extract_fields(path)
+    if error:
+        return {"supported": False, "fields": {}, "excerpt": "", "error": error}
+    return {
+        "supported": True,
+        "fields": fields,
+        "excerpt": evidence_excerpt(path),
+        "error": None,
+    }
+
+
+def archive_suggestion(fields: dict[str, str]) -> dict | None:
+    project = fields.get("project")
+    if not project:
+        return None
+    status = (fields.get("status") or "").strip().lower()
+    folder = tag_for(project) or "Unsorted"
+    date_text = fields.get("date") or ""
+    if status in ARCHIVE_STATUSES:
+        year = date_text[:4] if re.fullmatch(r"\d{4}-\d{2}-\d{2}", date_text) else "Unsorted"
+        return {
+            "destination": f"Archive/{year}/{folder}",
+            "reason": f"Status is {status}",
+            "confidence": "high",
+        }
+    match = re.fullmatch(r"(\d{4})-(\d{2})-(\d{2})", date_text)
+    if match:
+        try:
+            document_date = date(int(match.group(1)), int(match.group(2)), int(match.group(3)))
+            age_days = (date.today() - document_date).days
+        except ValueError:
+            age_days = 0
+        if age_days > 365:
+            return {
+                "destination": f"Archive/{match.group(1)}/{folder}",
+                "reason": "Document date is older than 12 months",
+                "confidence": "medium",
+            }
+    return None
 
 
 def tag_for(project: str) -> str | None:
@@ -137,6 +406,23 @@ def print_findings(
         print("   Not reviewed:")
         for path, reason in skipped:
             print(f"     - {rel(root, path)}: {reason}")
+    print()
+
+
+def print_archive(root: Path, groups: dict[str, list[Path]], suggestions: list[tuple[Path, dict]]) -> None:
+    print("5. Archive suggestions (read-only)")
+    if not suggestions and not groups:
+        print("   No archive suggestions.")
+        print()
+        return
+    for path, suggestion in suggestions:
+        print(f"   {rel(root, path)}  ->  {suggestion['destination']}")
+        print(f"     {suggestion['reason']}")
+    for members in groups.values():
+        print("   Duplicate group: keep one copy; the others are archive candidates.")
+        for member in members:
+            print(f"     - {rel(root, member)}")
+    print("   No files are moved by this demo.")
     print()
 
 
@@ -274,23 +560,31 @@ def main() -> int:
     findings: list[tuple[Path, dict[str, str], str]] = []
     skipped: list[tuple[Path, str]] = []
     proposals: list[tuple[Path, str]] = []
+    archive_suggestions: list[tuple[Path, dict]] = []
+    duplicate_members = {member for members in groups.values() for member in members}
     for path in files:
-        if path.name == TAG_FILE or path.suffix.lower() not in TEXT_EXTS:
-            skipped.append((path, "not a text document in this demo"))
+        if path.name == TAG_FILE or path.suffix.lower() not in DOCUMENT_EXTS:
+            skipped.append((path, "not a supported document format in this demo"))
             continue
-        fields, error = extract_fields(path)
-        if error:
-            skipped.append((path, error))
+        review = review_file(path)
+        if not review["supported"]:
+            skipped.append((path, review["error"] or "could not review"))
             continue
-        findings.append((path, fields, evidence_excerpt(path)))
+        fields = review["fields"]
+        findings.append((path, fields, review["excerpt"]))
         project = fields.get("project")
         if project:
             tag = tag_for(project)
             if tag:
                 proposals.append((path, tag))
+        if path not in duplicate_members:
+            suggestion = archive_suggestion(fields)
+            if suggestion:
+                archive_suggestions.append((path, suggestion))
 
     print_findings(folder, findings, skipped)
     print_proposals(folder, proposals)
+    print_archive(folder, groups, archive_suggestions)
 
     if not proposals:
         print("No tags are available for approval. Stopping.")
@@ -303,7 +597,7 @@ def main() -> int:
         return 0
 
     applied, failed = apply_tags(folder, proposals, selected)
-    print("5. Result")
+    print("6. Result")
     for key in applied:
         print(f"   tagged:  {key}")
     for item in failed:

@@ -12,14 +12,15 @@ ArchiveWise is a Uliya Skill for the UGREEN NAS Skill Hackathon 2026 (Track: **A
 
 - **Scope first.** Accepts one folder path or relative folder name; never scans the whole NAS.
 - **Duplicates as evidence.** Reports only groups returned by the NAS duplicate scan; never infers duplicates from names or sizes.
-- **Document findings with sources.** Extracts requested fields such as type, date, project, and status, with a source path and evidence excerpt.
+- **Document findings with sources.** Extracts requested fields such as type, date, project, and status from supported documents, with a source path and evidence excerpt.
 - **Explicit approval.** Presents exact file and tag pairs and waits for approval, including approval to create a new tag.
+- **Archive suggestions (demo preview).** The local simulator suggests destinations from status/date evidence and lists duplicate groups to resolve. Suggestions are read-only; the submitted Skill remains tag-only.
 - **Honest states.** Reports `completed`, `failed`, `cancelled`, `waiting_user`, and `waiting_approval` without describing planned work as done.
 - **Preserves files.** This version does not delete, move, rename, compress, or share any reviewed file.
 
 ## Screenshots
 
-The GUI opens on the Overview page above; every Review item has its own page.
+The GUI opens on the Overview page above; every Review item has its own page. The demo reads text, Word, Excel, PowerPoint, HTML, CSV, RTF, JSON, XML, Markdown, and optional PDF files.
 
 <p align="center">
   <img src="demo/archivewise-pages-duplicates.png" width="49%" alt="Duplicates page">
@@ -27,10 +28,14 @@ The GUI opens on the Overview page above; every Review item has its own page.
 </p>
 <p align="center">
   <img src="demo/archivewise-pages-tags.png" width="49%" alt="Tags page with approval bar">
-  <img src="demo/archivewise-pages-attention.png" width="49%" alt="Needs attention page">
+  <img src="demo/archivewise-pages-archive.png" width="49%" alt="Archive suggestions page">
 </p>
 <p align="center">
+  <img src="demo/archivewise-pages-attention.png" width="49%" alt="Needs attention page">
   <img src="demo/archivewise-browse.png" width="49%" alt="In-app folder browser">
+</p>
+<p align="center">
+  <img src="demo/archivewise-pages-formats.png" width="98%" alt="Documents extracted from Word, Excel, HTML, CSV, and RTF files">
 </p>
 
 ## Submission artifacts
@@ -74,7 +79,9 @@ The Skill itself runs inside UGREEN's NAS expert runtime. This repository includ
 python demo\gui_server.py
 ```
 
-It opens <http://127.0.0.1:8765/>. Use the page navigation to inspect duplicates, documents, tags, and unresolved items. On the Tags page, tick the tags you approve and press **Approve selected**. Reviewed files are never modified; approved tags are recorded in `archivewise-tags.json` inside the reviewed folder.
+It opens <http://127.0.0.1:8765/>. Use the page navigation to inspect duplicates, documents, tags, archive suggestions, and unresolved items. On the Tags page, tick the tags you approve and press **Approve selected**. Reviewed files are never modified; approved tags are recorded in `archivewise-tags.json` inside the reviewed folder.
+
+To test Word, Excel, HTML, CSV, and RTF extraction, open `demo/formats-folder`; its Documents page shows the extracted fields, and its Archive page shows the read-only destinations.
 
 See [SETUP.md](SETUP.md) for step-by-step instructions, and [`demo/README.md`](demo/README.md) for GUI details, the CLI mode, and the demo's honest limits.
 

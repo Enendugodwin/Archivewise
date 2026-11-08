@@ -65,34 +65,46 @@ def build_review(folder: Path) -> dict:
     skipped = list(unreadable)
     proposals = []
     untagged = []
+    archive_suggestions = []
+    duplicate_members = {
+        core.rel(folder, member)
+        for members in (group for group in hashes.values() if len(group) > 1)
+        for member in members
+    }
     for path in files:
-        if path.suffix.lower() not in core.TEXT_EXTS:
-            skipped.append({"file": core.rel(folder, path), "reason": "not a text document in this demo"})
+        if path.suffix.lower() not in core.DOCUMENT_EXTS:
+            skipped.append({"file": core.rel(folder, path), "reason": "not a supported document format in this demo"})
             continue
-        fields, error = core.extract_fields(path)
-        if error:
-            skipped.append({"file": core.rel(folder, path), "reason": error})
+        review = core.review_file(path)
+        if not review["supported"]:
+            skipped.append({"file": core.rel(folder, path), "reason": review["error"] or "could not review"})
             continue
+        fields = review["fields"]
         findings.append(
             {
                 "file": core.rel(folder, path),
                 "fields": {key: fields.get(key) for key in core.FIELDS},
-                "excerpt": core.evidence_excerpt(path),
+                "excerpt": review["excerpt"],
             }
         )
         project = fields.get("project")
         tag = core.tag_for(project) if project else None
+        item = core.rel(folder, path)
         if tag:
             proposals.append(
                 {
                     "id": len(proposals),
-                    "file": core.rel(folder, path),
+                    "file": item,
                     "tag": tag,
                     "reason": f"project: {project}",
                 }
             )
         else:
-            untagged.append(core.rel(folder, path))
+            untagged.append(item)
+        if item not in duplicate_members:
+            suggestion = core.archive_suggestion(fields)
+            if suggestion:
+                archive_suggestions.append({"file": item, **suggestion})
 
     return {
         "folder": str(folder),
@@ -104,6 +116,7 @@ def build_review(folder: Path) -> dict:
         "proposals": proposals,
         "skipped": skipped,
         "untagged": untagged,
+        "archive_suggestions": archive_suggestions,
     }
 
 

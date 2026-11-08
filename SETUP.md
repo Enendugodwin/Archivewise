@@ -10,7 +10,13 @@ This guide is for instructors and reviewers who want to run the local ArchiveWis
 - Optional: Node.js 18+ for the static Skill checker
 - Optional: Git for cloning the repository
 
-The demo uses only the Python standard library. There is nothing to `pip install`.
+The demo uses the Python standard library for text, Word, Excel, PowerPoint, HTML, CSV, RTF, JSON, XML, and Markdown. PDF extraction is optional and needs `pypdf`:
+
+```powershell
+python -m pip install -r demo\requirements.txt
+```
+
+Without `pypdf`, PDFs are reported under **Needs attention** rather than guessed.
 
 ## 2. Get the project
 
@@ -57,6 +63,7 @@ The sample folder loads automatically. The expected summary is:
 - **2 duplicate groups**
 - **5 documents**
 - **4 proposed tags**
+- **2 archive ideas** (the two duplicate groups)
 - **3 needs-attention items** (2 could not be reviewed, 1 without a tag proposal)
 
 Walk through each page:
@@ -66,13 +73,26 @@ Walk through each page:
 3. **Duplicates** - confirm two groups: `Project-A_contract.txt` with its copy, and `Project-B_invoice.txt` with its duplicate.
 4. **Documents** - confirm five rows with type, date, project, status, and an evidence excerpt.
 5. **Tags** - select all four tags and press **Approve selected**. Confirm the applied state and the result path to `archivewise-tags.json`.
-6. **Needs attention** - confirm `broken.txt` and `scan.bin` under "Could not review", and `notes.txt` under "No tag proposal".
-7. **Navigation** - switch pages from the left sidebar, the app dock, and (on narrow screens) the mobile chips. The active page should stay in sync.
-8. **Window controls** - try minimize/restore, maximize, and close/reopen from the title bar.
+6. **Archive** - confirm two duplicate groups under "Duplicate groups to resolve" and no file-level suggestions. **Archive suggestions are read-only; no files are moved.**
+7. **Needs attention** - confirm `broken.txt` and `scan.bin` under "Could not review", and `notes.txt` under "No tag proposal".
+8. **Navigation** - switch pages from the left sidebar, the app dock, and (on narrow screens) the mobile chips. The active page should stay in sync.
+9. **Window controls** - try minimize/restore, maximize, and close/reopen from the title bar.
+
+### Test other document formats
+
+Use **Change folder** to open:
+
+```text
+demo/formats-folder
+```
+
+Expected result: **5 files, 5 documents, 5 proposed tags, 4 archive suggestions**.
+
+The folder contains `.docx`, `.xlsx`, `.html`, `.csv`, and `.rtf` files. Their fields should appear on **Documents**, tags on **Tags**, and destinations such as `Archive/2026/Project-C` on **Archive**.
 
 ### What the demo changes
 
-The demo writes only one file, `archivewise-tags.json`, inside the reviewed folder. It never deletes, moves, renames, or rewrites a reviewed file.
+The demo writes only one file, `archivewise-tags.json`, inside the reviewed folder. It never deletes, moves, renames, or rewrites a reviewed file. Archive suggestions are read-only.
 
 To reset the sample:
 
@@ -132,16 +152,21 @@ The checker is read-only. It validates the package structure and catalog mapping
 | Browse shows no subfolders | That folder has no subfolders. Use **Home** or **Up**, or paste a path. |
 | The page looks stale | Refresh; the server sends `Cache-Control: no-store`. |
 | The tag file is missing | It is inside the reviewed folder, named `archivewise-tags.json`. |
+| PDF is under "Needs attention" | Install optional PDF support: `python -m pip install -r demo\requirements.txt`. |
+| A file says "not a supported document format" | The demo reads documents, not images, audio, video, or archives. Word, Excel, PowerPoint, HTML, CSV, RTF, JSON, XML, Markdown, and optional PDF are supported. |
 | The checker command fails | Confirm Node.js is installed and the kit path is exactly as above. |
 
 ## 7. Instructor checklist
 
 - [ ] `python demo\gui_server.py` starts and opens the GUI
-- [ ] Overview shows 7 files, 2 duplicate groups, 5 documents, 4 proposed tags
+- [ ] Overview shows 7 files, 2 duplicate groups, 5 documents, 4 proposed tags, 2 archive ideas
 - [ ] Browse opens the in-app folder browser and loads a selected folder
 - [ ] Duplicates shows two groups
 - [ ] Documents shows five rows with evidence
 - [ ] Tags accepts selection and shows the applied state
+- [ ] Archive shows the two duplicate groups and no file-level suggestions
+- [ ] `demo/formats-folder` shows 5 documents from DOCX, XLSX, HTML, CSV, and RTF
+- [ ] `demo/formats-folder` shows 4 archive suggestions
 - [ ] Needs attention shows 2 unresolved files and 1 file without a tag proposal
 - [ ] `archivewise-tags.json` is created in the reviewed folder
 - [ ] Reviewed files are unchanged

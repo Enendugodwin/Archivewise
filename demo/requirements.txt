@@ -1,0 +1,3 @@
+﻿# Optional PDF text extraction for the local demo.
+# Word, Excel, PowerPoint, HTML, CSV, RTF, JSON, XML, and Markdown use the standard library.
+pypdf>=5.0

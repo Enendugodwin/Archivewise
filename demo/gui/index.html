@@ -112,6 +112,7 @@
   .ic-dupes { background: linear-gradient(145deg, #fb923c, #ea580c); }
   .ic-docs { background: linear-gradient(145deg, #34d399, #059669); }
   .ic-tags { background: linear-gradient(145deg, #f472b6, #db2777); }
+  .ic-archive { background: linear-gradient(145deg, #38bdf8, #0369a1); }
   .ic-attn { background: linear-gradient(145deg, #f87171, #dc2626); }
   .ic-help { background: linear-gradient(145deg, #fbbf24, #d97706); }
   .ic-github { background: linear-gradient(145deg, #475569, #111827); }
@@ -247,6 +248,20 @@
   .attention-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
   .plain-list { margin: 0; padding-left: 17px; color: var(--muted); font-size: 11.5px; }
   .plain-list li { margin: 2px 0; overflow-wrap: anywhere; }
+  .archive-item {
+    padding: 10px 12px; border: 1px solid var(--line); border-radius: 7px;
+    margin-bottom: 8px; background: #fafbfc;
+  }
+  .archive-item:last-child { margin-bottom: 0; }
+  .archive-item .file { font-family: "Cascadia Code", Consolas, monospace; font-size: 11.5px; overflow-wrap: anywhere; }
+  .archive-item .dest { color: var(--blue-600); font-size: 11.5px; font-weight: 600; margin-top: 3px; }
+  .archive-item .reason { color: var(--muted); font-size: 11px; margin-top: 2px; }
+  .confidence {
+    display: inline-block; padding: 1px 6px; border-radius: 999px;
+    font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+    background: #fff7e6; color: #b45309; margin-left: 4px;
+  }
+  .confidence.high { background: #e9f7ef; color: #0f7b4f; }
   .folder-card { padding: 13px 14px 14px; margin-bottom: 14px; }
   .folder-card label { display: block; font-size: 11.5px; font-weight: 600; margin-bottom: 6px; color: #374151; }
   .folder-row { display: flex; gap: 7px; }
@@ -278,7 +293,7 @@
   }
   @keyframes slide { 0% { transform: translateX(-110%); } 100% { transform: translateX(380%); } }
 
-  .stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+  .stats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
   .stat { padding: 11px 13px; background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); }
   .stat .k { color: var(--faint); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; }
   .stat .v { margin-top: 2px; font-size: 22px; font-weight: 600; letter-spacing: -.02em; line-height: 1.2; }
@@ -500,6 +515,12 @@
     </span>
     <span class="dock-label">Tags</span>
   </button>
+  <button class="dock-item" type="button" data-view="archive" title="Archive suggestions">
+    <span class="dock-icon ic-archive">
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5h17v11a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-11Z"/><path d="M2.5 4.5h19v3h-19z"/><path d="M12 11v5"/><path d="m9.5 13.5 2.5 2.5 2.5-2.5"/></svg>
+    </span>
+    <span class="dock-label">Archive</span>
+  </button>
   <button class="dock-item" type="button" data-view="attention" title="Needs attention">
     <span class="dock-icon ic-attn">
       <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5"/><circle cx="12" cy="17.2" r=".7" fill="currentColor" stroke="none"/></svg>
@@ -564,6 +585,10 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20.5 13.2 12.8 21 3 11.2V3h8.2l9.3 9.3a1.3 1.3 0 0 1 0 .9Z"/><circle cx="7.5" cy="7.5" r="1.1"/></svg>
           Tags <span class="side-count" id="side-tags">0</span>
         </button>
+        <button class="side-item" type="button" data-view="archive">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3.5 7.5h17v11a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-11Z"/><path d="M2.5 4.5h19v3h-19z"/><path d="M12 11v5"/><path d="m9.5 13.5 2.5 2.5 2.5-2.5"/></svg>
+          Archive <span class="side-count" id="side-archive">0</span>
+        </button>
         <button class="side-item" type="button" data-view="attention">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5"/><circle cx="12" cy="17.2" r=".7" fill="currentColor" stroke="none"/></svg>
           Needs attention <span class="side-count" id="side-attn">0</span>
@@ -590,6 +615,7 @@
           <button class="m-chip" type="button" data-view="duplicates">Duplicates</button>
           <button class="m-chip" type="button" data-view="documents">Documents</button>
           <button class="m-chip" type="button" data-view="tags">Tags</button>
+          <button class="m-chip" type="button" data-view="archive">Archive</button>
           <button class="m-chip" type="button" data-view="attention">Attention</button>
         </nav>
 
@@ -627,13 +653,14 @@
               <button class="stat" type="button" data-view="duplicates"><div class="k">Duplicate groups</div><div class="v" id="stat-groups">0</div></button>
               <button class="stat" type="button" data-view="documents"><div class="k">Documents</div><div class="v" id="stat-docs">0</div></button>
               <button class="stat hot" type="button" data-view="tags"><div class="k">Proposed tags</div><div class="v" id="stat-tags">0</div></button>
+              <button class="stat" type="button" data-view="archive"><div class="k">Archive ideas</div><div class="v" id="stat-archive">0</div></button>
               <button class="stat warn" type="button" data-view="attention"><div class="k">Needs attention</div><div class="v" id="stat-attn">0</div></button>
             </section>
             <p class="hint" id="stats-hint">Select a card to open its page.</p>
 
             <section class="card panel overview-note">
               <div class="panel-head"><h2>What happens next</h2></div>
-              <p class="hint">ArchiveWise reports only what the folder scan returns. Review each section, then approve exact tags on the Tags page. No reviewed file is moved, renamed, or deleted.</p>
+              <p class="hint">ArchiveWise reports only what the folder scan returns. Review each section, then approve exact tags on the Tags page. Archive suggestions are read-only; no reviewed file is moved, renamed, or deleted.</p>
             </section>
           </section>
 
@@ -691,6 +718,33 @@
                 </div>
               </div>
             </div>
+          </section>
+
+          <section class="view" id="view-archive" data-page="archive">
+            <div class="attention-grid">
+              <section class="card panel" aria-labelledby="archive-suggestions-title">
+                <div class="panel-head">
+                  <h2 id="archive-suggestions-title">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5h17v11a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-11Z"/><path d="M2.5 4.5h19v3h-19z"/><path d="M12 11v5"/><path d="m9.5 13.5 2.5 2.5 2.5-2.5"/></svg>
+                    Suggested for archive
+                  </h2>
+                  <span class="count-pill" id="archive-suggestions-count">0</span>
+                </div>
+                <div id="archive-suggestions"></div>
+              </section>
+
+              <section class="card panel" aria-labelledby="archive-groups-title">
+                <div class="panel-head">
+                  <h2 id="archive-groups-title">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
+                    Duplicate groups to resolve
+                  </h2>
+                  <span class="count-pill" id="archive-groups-count">0</span>
+                </div>
+                <div id="archive-groups"></div>
+              </section>
+            </div>
+            <p class="hint">Read-only suggestions. No files are moved by this demo; use the Tags page to approve tags.</p>
           </section>
 
           <section class="view" id="view-attention" data-page="attention">
@@ -815,6 +869,7 @@
     duplicates: ['Duplicates', 'Groups returned by the duplicate scan.'],
     documents: ['Documents', 'Fields extracted from your documents, with sources.'],
     tags: ['Tags', 'Choose the exact tags to apply.'],
+    archive: ['Archive', 'Read-only suggestions for files you may want to archive.'],
     attention: ['Needs attention', 'Items that could not be fully reviewed.'],
   };
 
@@ -912,6 +967,7 @@
     $('#folder').value = data.folder;
     const hasFiles = data.files > 0;
     const attention = data.skipped.length + data.untagged.length;
+    const archiveIdeas = (data.archive_suggestions || []).length + data.groups.length;
     $('#summary').hidden = !hasFiles;
     $('#stats-hint').hidden = !hasFiles;
     $('#content').hidden = false;
@@ -931,6 +987,7 @@
     $('#stat-groups').textContent = data.groups.length;
     $('#stat-docs').textContent = data.findings.length;
     $('#stat-tags').textContent = data.proposals.length;
+    $('#stat-archive').textContent = archiveIdeas;
     $('#stat-attn').textContent = attention;
     $('#dupes-count').textContent = data.groups.length;
     $('#findings-count').textContent = data.findings.length;
@@ -939,6 +996,7 @@
     $('#side-groups').textContent = data.groups.length;
     $('#side-docs').textContent = data.findings.length;
     $('#side-tags').textContent = data.proposals.length;
+    $('#side-archive').textContent = archiveIdeas;
     $('#side-attn').textContent = attention;
     $('#total-count').textContent = data.proposals.length;
 
@@ -946,6 +1004,7 @@
     renderFindings(data.findings);
     renderTags(data.proposals, data.untagged);
     renderUnresolved(data.skipped);
+    renderArchive(data);
     updateSelection();
   }
 
@@ -1044,6 +1103,37 @@
         ${icons.alert}
         <div><div class="f mono">${esc(item.file)}</div><div class="r">${esc(item.reason)}</div></div>
       </div>`).join('') + '</div>';
+  }
+
+  function renderArchive(data) {
+    const suggestions = data.archive_suggestions || [];
+    const groups = data.groups || [];
+    $('#archive-suggestions-count').textContent = suggestions.length;
+    $('#archive-groups-count').textContent = groups.length;
+
+    const suggestionRoot = $('#archive-suggestions');
+    if (!suggestions.length) {
+      suggestionRoot.innerHTML = '<p class="hint">No file-level archive suggestions for this folder.</p>';
+    } else {
+      suggestionRoot.innerHTML = suggestions.map((item) => `
+        <article class="archive-item">
+          <div class="file mono">${esc(item.file)}</div>
+          <div class="dest">${esc(item.destination)}</div>
+          <div class="reason">${esc(item.reason)} <span class="confidence ${esc(item.confidence)}">${esc(item.confidence)}</span></div>
+        </article>`).join('');
+    }
+
+    const groupRoot = $('#archive-groups');
+    if (!groups.length) {
+      groupRoot.innerHTML = '<p class="hint">No duplicate groups to resolve.</p>';
+    } else {
+      groupRoot.innerHTML = groups.map((group, index) => `
+        <article class="archive-item">
+          <div class="file mono">Group ${index + 1} - ${group.members.length} copies</div>
+          <ul class="plain-list">${group.members.map((member) => `<li class="mono">${esc(member)}</li>`).join('')}</ul>
+          <div class="reason">Keep one copy; the others are archive candidates.</div>
+        </article>`).join('');
+    }
   }
 
   function updateSelection() {

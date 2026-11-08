@@ -16,6 +16,7 @@ Every item under **Review** has its own page, and the dock, sidebar, and mobile 
 | **Duplicates** | Only the duplicate groups returned by the scan |
 | **Documents** | Extracted fields, sources, and evidence excerpts |
 | **Tags** | Tag selection, approval, and the applied-tag result |
+| **Archive** | Read-only archive destinations and duplicate groups to resolve |
 | **Needs attention** | Files that could not be reviewed, and files without a tag proposal |
 
 The selected folder remains visible on every page, with a **Change folder** link back to Overview.
@@ -30,11 +31,13 @@ The browser opens at <http://127.0.0.1:8765/>.
 
 1. The sample folder loads automatically.
 2. Paste a local folder path and press **Analyze**, or press **Browse** to open the in-app folder browser.
-3. Open each Review page to inspect duplicates, documents, tags, and unresolved items.
+3. Open each Review page to inspect duplicates, documents, tags, archive ideas, and unresolved items.
 4. On the **Tags** page, tick the tags you approve and press **Approve selected**.
 5. Approved tags are recorded in `archivewise-tags.json` inside the reviewed folder.
 
 ![Tags page with the approval bar](archivewise-pages-tags.png)
+
+![Archive suggestions page](archivewise-pages-archive.png)
 
 ![In-app folder browser](archivewise-browse.png)
 
@@ -70,12 +73,44 @@ python demo\archivewise_demo.py "C:\Users\user\Documents\some-folder"
 
 1. Resolves the folder and lists files (depth 3, up to 200 files).
 2. Groups byte-identical files by SHA-256.
-3. Reads text documents and extracts `Type`, `Date`, `Project`, and `Status`.
-4. Presents duplicate groups, document findings, proposed tags, and unresolved items.
+3. Reads supported documents and extracts `Type`, `Date`, `Project`, and `Status`.
+4. Presents duplicate groups, document findings, proposed tags, archive suggestions, and unresolved items.
 5. Asks for approval of exact file and tag pairs.
 6. Records approved tags in `archivewise-tags.json` inside the reviewed folder.
 
-It never deletes, moves, renames, or rewrites a reviewed file. Re-run it and the sidecar is skipped from the file list. Delete `archivewise-tags.json` to reset.
+Archive suggestions are read-only. No file is moved by this demo.
+
+## Supported document formats
+
+| Format | Extensions | Notes |
+|---|---|---|
+| Plain text / Markdown | `.txt`, `.md`, `.markdown`, `.log` | Standard library |
+| Web / data | `.html`, `.htm`, `.json`, `.xml`, `.csv` | Standard library |
+| Word | `.docx` | OOXML text extraction |
+| Excel | `.xlsx` | OOXML cell text extraction |
+| PowerPoint | `.pptx` | OOXML slide text extraction |
+| RTF | `.rtf` | Basic text extraction |
+| PDF | `.pdf` | Optional: `pip install -r demo/requirements.txt` |
+
+Install optional PDF support:
+
+```powershell
+python -m pip install -r demo\requirements.txt
+```
+
+If `pypdf` is not installed, PDFs appear under **Needs attention** with a clear message instead of being guessed.
+
+## Try the formats sample
+
+The main sample folder stays text-only. To see the other formats, open this folder in the GUI:
+
+```text
+demo/formats-folder
+```
+
+It contains Word, Excel, HTML, CSV, and RTF documents. Expected result: **5 files, 5 documents, 5 proposed tags, 4 archive suggestions**.
+
+![Documents extracted from Word, Excel, HTML, CSV, and RTF](archivewise-pages-formats.png)
 
 ## What the sample folder shows
 
@@ -85,13 +120,15 @@ It never deletes, moves, renames, or rewrites a reviewed file. Re-run it and the
 | `Project-B_invoice.txt` + `Project-B_invoice_duplicate.txt` | One duplicate group; both propose the `Project-B` tag |
 | `notes.txt` | Missing project field, so no tag is proposed |
 | `broken.txt` | Invalid UTF-8, reported as unresolved |
-| `scan.bin` | Not a text document, reported as not reviewed |
+| `scan.bin` | Not a supported document format, reported as not reviewed |
 
 ## Honest limits
 
 - This is a **simulation**, not the Uliya Skill runtime.
 - Duplicate detection uses local SHA-256, not UGREEN `scan-dedupe`.
-- Only text-like files are read (`.txt`, `.md`, `.markdown`, `.csv`, `.log`). PDF and Office extraction are not implemented here.
+- Word, Excel, PowerPoint, HTML, CSV, RTF, JSON, XML, and Markdown use the standard library. PDF requires the optional `pypdf` package.
+- Office extraction is text-only; formatting, images, and embedded objects are not extracted.
+- Archive suggestions are read-only. The demo never moves, deletes, renames, or rewrites a reviewed file.
 - Tags are written to a JSON sidecar, not applied as NAS tags.
 - There are no platform approval gates or registered NAS experts in this demo.
 - The submitted package remains `dist/archivewise.zip`, built only from `archivewise/SKILL.md` and its linked references.
