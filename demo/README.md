@@ -4,7 +4,21 @@ The submitted Skill (`archivewise/`) is a Uliya orchestration package. Its real 
 
 This folder is a **local simulator** of the review and approval experience. It calls no NAS capability, and it is not part of the submitted ZIP. It exists so you can try the flow on this PC before NAS access is available. The preview is styled after the UGREEN UGOS desktop.
 
-![ArchiveWise local GUI showing duplicate groups, document findings, and proposed tags](archivewise-gui.png)
+![ArchiveWise local GUI overview](archivewise-gui.png)
+
+## Pages
+
+Every item under **Review** has its own page, and the dock, sidebar, and mobile chips all switch between them:
+
+| Page | Contents |
+|---|---|
+| **Overview** | Folder picker, review summary, and links into each section |
+| **Duplicates** | Only the duplicate groups returned by the scan |
+| **Documents** | Extracted fields, sources, and evidence excerpts |
+| **Tags** | Tag selection, approval, and the applied-tag result |
+| **Needs attention** | Files that could not be reviewed, and files without a tag proposal |
+
+The selected folder remains visible on every page, with a **Change folder** link back to Overview.
 
 ## Launch the GUI
 
@@ -15,10 +29,14 @@ python demo\gui_server.py
 The browser opens at <http://127.0.0.1:8765/>.
 
 1. The sample folder loads automatically.
-2. Or paste any local folder path and press **Analyze**; **Browse** opens a native folder picker.
-3. Review duplicate groups, document findings, proposed tags, and unresolved files.
-4. Tick the tags you approve and press **Approve selected**.
+2. Paste a local folder path and press **Analyze**, or press **Browse** to open the in-app folder browser.
+3. Open each Review page to inspect duplicates, documents, tags, and unresolved items.
+4. On the **Tags** page, tick the tags you approve and press **Approve selected**.
 5. Approved tags are recorded in `archivewise-tags.json` inside the reviewed folder.
+
+![Tags page with the approval bar](archivewise-pages-tags.png)
+
+![In-app folder browser](archivewise-browse.png)
 
 Options:
 

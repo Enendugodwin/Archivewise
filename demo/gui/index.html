@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ArchiveWise — UGOS-style Preview</title>
+<title>ArchiveWise  -  UGOS-style Preview</title>
 <style>
   :root {
     --blue: #2f6fed;
@@ -228,6 +228,25 @@
 
   .card { background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); min-width: 0; }
   .panel, .stat { min-width: 0; }
+
+  .view { display: none; }
+  .view.active { display: block; }
+  .scope-strip {
+    display: flex; align-items: center; gap: 8px; padding: 8px 10px; margin-bottom: 12px;
+    background: var(--white); border: 1px solid var(--line); border-radius: 7px;
+    font-size: 11.5px; color: var(--muted);
+  }
+  .scope-strip svg { color: var(--blue); flex: 0 0 auto; }
+  .scope-strip .grow { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #374151; }
+  .link-btn { border: 0; background: none; color: var(--blue-600); font-size: 11.5px; font-weight: 600; padding: 0; white-space: nowrap; }
+  .link-btn:hover { text-decoration: underline; }
+  button.stat { appearance: none; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+  button.stat:hover { border-color: var(--blue-border); background: #fbfdff; }
+  .overview-note { margin-top: 14px; }
+  .tags-page { max-width: 820px; }
+  .attention-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+  .plain-list { margin: 0; padding-left: 17px; color: var(--muted); font-size: 11.5px; }
+  .plain-list li { margin: 2px 0; overflow-wrap: anywhere; }
   .folder-card { padding: 13px 14px 14px; margin-bottom: 14px; }
   .folder-card label { display: block; font-size: 11.5px; font-weight: 600; margin-bottom: 6px; color: #374151; }
   .folder-row { display: flex; gap: 7px; }
@@ -382,6 +401,33 @@
   .dialog-body { padding: 15px 16px; color: #4b5563; font-size: 12.5px; }
   .dialog-body p { margin: 0 0 9px; }
   .dialog-actions { display: flex; justify-content: flex-end; gap: 7px; padding: 0 16px 15px; }
+  .browse-dialog { width: min(620px, calc(100vw - 32px)); }
+  .browse-toolbar { display: flex; gap: 7px; padding: 12px 16px 0; }
+  .browse-toolbar input {
+    flex: 1; min-width: 0; height: 32px; padding: 0 9px;
+    border: 1px solid #d6dbe3; border-radius: 6px; background: #fafbfc;
+    color: #374151; font-size: 11.5px;
+  }
+  .browse-drives { display: flex; gap: 6px; flex-wrap: wrap; padding: 10px 16px 0; }
+  .browse-drive {
+    border: 1px solid var(--line); background: #fff; border-radius: 6px;
+    padding: 4px 8px; font-size: 11.5px; color: #374151;
+  }
+  .browse-drive:hover { background: #f7faff; border-color: var(--blue-border); }
+  .browse-list {
+    height: 300px; max-height: 50vh; overflow: auto; margin: 12px 16px;
+    border: 1px solid var(--line); border-radius: 7px; background: #fff;
+  }
+  .browse-item {
+    width: 100%; border: 0; border-bottom: 1px solid var(--line-soft); background: #fff;
+    display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+    text-align: left; font-size: 12.5px; color: #374151;
+  }
+  .browse-item:last-child { border-bottom: 0; }
+  .browse-item:hover { background: #f7faff; }
+  .browse-item svg { color: #f59e0b; flex: 0 0 auto; }
+  .browse-item .mono { font-size: 11.5px; overflow-wrap: anywhere; }
+  .browse-empty { padding: 16px; color: var(--muted); font-size: 12px; }
   .closed-card { text-align: center; padding: 26px 24px; }
   .closed-card .big { width: 48px; height: 48px; margin: 0 auto 10px; border-radius: 12px; display: grid; place-items: center; background: linear-gradient(145deg, #4f8ef7, #1d4ed8); color: #fff; }
   .closed-card h2 { margin: 0 0 4px; font-size: 15px; }
@@ -430,31 +476,31 @@
 </div>
 
 <nav class="dock" id="dock" aria-label="Application sections">
-  <button class="dock-item active" type="button" data-scroll="top" title="Overview">
+  <button class="dock-item active" type="button" data-view="overview" title="Overview">
     <span class="dock-icon ic-app">
       <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5h17v11a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-11Z"/><path d="M2.5 4.5h19v3h-19z"/><path d="M10 12h4"/></svg>
     </span>
     <span class="dock-label">ArchiveWise</span>
   </button>
-  <button class="dock-item" type="button" data-scroll="dupes-card" title="Duplicate groups">
+  <button class="dock-item" type="button" data-view="duplicates" title="Duplicate groups">
     <span class="dock-icon ic-dupes">
       <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
     </span>
     <span class="dock-label">Duplicates</span>
   </button>
-  <button class="dock-item" type="button" data-scroll="findings-card" title="Document findings">
+  <button class="dock-item" type="button" data-view="documents" title="Document findings">
     <span class="dock-icon ic-docs">
       <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2.8h8l4 4v14.4H6z"/><path d="M14 2.8v4h4"/><path d="M9 12h6M9 15.5h6"/></svg>
     </span>
     <span class="dock-label">Documents</span>
   </button>
-  <button class="dock-item" type="button" data-scroll="tags-card" title="Proposed tags">
+  <button class="dock-item" type="button" data-view="tags" title="Proposed tags">
     <span class="dock-icon ic-tags">
       <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 13.2 12.8 21 3 11.2V3h8.2l9.3 9.3a1.3 1.3 0 0 1 0 .9Z"/><circle cx="7.5" cy="7.5" r="1.1"/></svg>
     </span>
     <span class="dock-label">Tags</span>
   </button>
-  <button class="dock-item" type="button" data-scroll="attn-card" title="Needs attention">
+  <button class="dock-item" type="button" data-view="attention" title="Needs attention">
     <span class="dock-icon ic-attn">
       <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5"/><circle cx="12" cy="17.2" r=".7" fill="currentColor" stroke="none"/></svg>
     </span>
@@ -502,23 +548,23 @@
     <div class="window-body">
       <aside class="sidebar" aria-label="Sections">
         <div class="side-label">Review</div>
-        <button class="side-item active" type="button" data-scroll="top">
+        <button class="side-item active" type="button" data-view="overview">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>
           Overview
         </button>
-        <button class="side-item" type="button" data-scroll="dupes-card">
+        <button class="side-item" type="button" data-view="duplicates">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
           Duplicates <span class="side-count" id="side-groups">0</span>
         </button>
-        <button class="side-item" type="button" data-scroll="findings-card">
+        <button class="side-item" type="button" data-view="documents">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 2.8h8l4 4v14.4H6z"/><path d="M14 2.8v4h4"/><path d="M9 12h6M9 15.5h6"/></svg>
           Documents <span class="side-count" id="side-docs">0</span>
         </button>
-        <button class="side-item" type="button" data-scroll="tags-card">
+        <button class="side-item" type="button" data-view="tags">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20.5 13.2 12.8 21 3 11.2V3h8.2l9.3 9.3a1.3 1.3 0 0 1 0 .9Z"/><circle cx="7.5" cy="7.5" r="1.1"/></svg>
           Tags <span class="side-count" id="side-tags">0</span>
         </button>
-        <button class="side-item" type="button" data-scroll="attn-card">
+        <button class="side-item" type="button" data-view="attention">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5"/><circle cx="12" cy="17.2" r=".7" fill="currentColor" stroke="none"/></svg>
           Needs attention <span class="side-count" id="side-attn">0</span>
         </button>
@@ -533,52 +579,66 @@
       <section class="content" id="content-scroll">
         <div class="page-head">
           <div>
-            <h1>Review</h1>
-            <p>Check duplicates, document details, and tags before anything changes.</p>
+            <h1 id="page-title">Overview</h1>
+            <p id="page-sub">Review the folder before you change anything.</p>
           </div>
           <span class="status-pill" id="mode-pill">Ready</span>
         </div>
 
         <nav class="mobile-nav" aria-label="Sections">
-          <button class="m-chip active" type="button" data-scroll="top">Overview</button>
-          <button class="m-chip" type="button" data-scroll="dupes-card">Duplicates</button>
-          <button class="m-chip" type="button" data-scroll="findings-card">Documents</button>
-          <button class="m-chip" type="button" data-scroll="tags-card">Tags</button>
-          <button class="m-chip" type="button" data-scroll="attn-card">Attention</button>
+          <button class="m-chip active" type="button" data-view="overview">Overview</button>
+          <button class="m-chip" type="button" data-view="duplicates">Duplicates</button>
+          <button class="m-chip" type="button" data-view="documents">Documents</button>
+          <button class="m-chip" type="button" data-view="tags">Tags</button>
+          <button class="m-chip" type="button" data-view="attention">Attention</button>
         </nav>
 
-        <section class="card folder-card" aria-labelledby="folder-label">
-          <form id="folder-form">
-            <label id="folder-label" for="folder">Folder to review</label>
-            <div class="folder-row">
-              <input id="folder" name="folder" type="text" autocomplete="off" spellcheck="false" placeholder="C:\Users\you\Downloads\2026-Projects">
-              <button type="button" class="btn ghost" id="browse">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
-                Browse
-              </button>
-              <button type="submit" class="btn primary" id="analyze">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
-                Analyze
-              </button>
-            </div>
-            <p class="hint">Try the sample folder or paste any local path. Reviewed files are never modified.</p>
-          </form>
-        </section>
+        <div class="scope-strip" id="scope-strip" hidden>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
+          <span class="grow mono" id="scope-folder">No folder selected</span>
+          <button class="link-btn" type="button" id="scope-change">Change folder</button>
+        </div>
 
         <div id="loading" aria-hidden="true"></div>
         <div id="error" class="banner error" role="alert"></div>
 
-        <section id="summary" class="stats" aria-label="Review summary" hidden>
-          <div class="stat"><div class="k">Files</div><div class="v" id="stat-files">0</div></div>
-          <div class="stat"><div class="k">Duplicate groups</div><div class="v" id="stat-groups">0</div></div>
-          <div class="stat"><div class="k">Documents</div><div class="v" id="stat-docs">0</div></div>
-          <div class="stat hot"><div class="k">Proposed tags</div><div class="v" id="stat-tags">0</div></div>
-          <div class="stat warn"><div class="k">Needs attention</div><div class="v" id="stat-attn">0</div></div>
-        </section>
+        <div id="content" hidden>
+          <section class="view active" id="view-overview" data-page="overview">
+            <section class="card folder-card" aria-labelledby="folder-label">
+              <form id="folder-form">
+                <label id="folder-label" for="folder">Folder to review</label>
+                <div class="folder-row">
+                  <input id="folder" name="folder" type="text" autocomplete="off" spellcheck="false" placeholder="C:\Users\you\Downloads\2026-Projects">
+                  <button type="button" class="btn ghost" id="browse">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
+                    Browse
+                  </button>
+                  <button type="submit" class="btn primary" id="analyze">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+                    Analyze
+                  </button>
+                </div>
+                <p class="hint">Pick a folder or paste a local path. Reviewed files are never modified.</p>
+              </form>
+            </section>
 
-        <div id="content" class="grid" hidden>
-          <div class="col">
-            <section class="card panel" id="dupes-card" aria-labelledby="dupes-title">
+            <section id="summary" class="stats" aria-label="Review summary" hidden>
+              <div class="stat"><div class="k">Files</div><div class="v" id="stat-files">0</div></div>
+              <button class="stat" type="button" data-view="duplicates"><div class="k">Duplicate groups</div><div class="v" id="stat-groups">0</div></button>
+              <button class="stat" type="button" data-view="documents"><div class="k">Documents</div><div class="v" id="stat-docs">0</div></button>
+              <button class="stat hot" type="button" data-view="tags"><div class="k">Proposed tags</div><div class="v" id="stat-tags">0</div></button>
+              <button class="stat warn" type="button" data-view="attention"><div class="k">Needs attention</div><div class="v" id="stat-attn">0</div></button>
+            </section>
+            <p class="hint" id="stats-hint">Select a card to open its page.</p>
+
+            <section class="card panel overview-note">
+              <div class="panel-head"><h2>What happens next</h2></div>
+              <p class="hint">ArchiveWise reports only what the folder scan returns. Review each section, then approve exact tags on the Tags page. No reviewed file is moved, renamed, or deleted.</p>
+            </section>
+          </section>
+
+          <section class="view" id="view-duplicates" data-page="duplicates">
+            <section class="card panel" aria-labelledby="dupes-title">
               <div class="panel-head">
                 <h2 id="dupes-title">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
@@ -588,8 +648,10 @@
               </div>
               <div id="dupes"></div>
             </section>
+          </section>
 
-            <section class="card panel" id="findings-card" aria-labelledby="findings-title">
+          <section class="view" id="view-documents" data-page="documents">
+            <section class="card panel" aria-labelledby="findings-title">
               <div class="panel-head">
                 <h2 id="findings-title">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2.8h8l4 4v14.4H6z"/><path d="M14 2.8v4h4"/><path d="M9 12h6M9 15.5h6"/></svg>
@@ -599,59 +661,76 @@
               </div>
               <div id="findings"></div>
             </section>
-          </div>
+          </section>
 
-          <div class="col">
-            <section class="card panel" id="tags-card" aria-labelledby="tags-title">
-              <div class="panel-head">
-                <h2 id="tags-title">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 13.2 12.8 21 3 11.2V3h8.2l9.3 9.3a1.3 1.3 0 0 1 0 .9Z"/><circle cx="7.5" cy="7.5" r="1.1"/></svg>
-                  Proposed tags
-                </h2>
-                <label class="selectall" id="selectall-wrap" hidden>
-                  <input type="checkbox" id="selectall"> All
-                </label>
+          <section class="view" id="view-tags" data-page="tags">
+            <div class="tags-page">
+              <section class="card panel" aria-labelledby="tags-title">
+                <div class="panel-head">
+                  <h2 id="tags-title">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 13.2 12.8 21 3 11.2V3h8.2l9.3 9.3a1.3 1.3 0 0 1 0 .9Z"/><circle cx="7.5" cy="7.5" r="1.1"/></svg>
+                    Proposed tags
+                  </h2>
+                  <label class="selectall" id="selectall-wrap" hidden>
+                    <input type="checkbox" id="selectall"> All
+                  </label>
+                </div>
+                <div id="result" class="banner result" role="status"></div>
+                <div id="tags"></div>
+              </section>
+
+              <div id="actionbar" class="actionbar">
+                <div class="summary" id="ab-summary">
+                  <span id="ab-selecting"><strong id="selected-count">0</strong> of <span id="total-count">0</span> tags selected</span>
+                  <span id="ab-done" hidden><strong id="applied-count">0</strong> tags applied &middot; tag record saved</span>
+                </div>
+                <div class="actions">
+                  <button type="button" class="btn ghost" id="again" hidden>Review another folder</button>
+                  <button type="button" class="btn ghost" id="clear">Clear</button>
+                  <button type="button" class="btn primary" id="approve" disabled>Approve selected</button>
+                </div>
               </div>
-              <div id="result" class="banner result" role="status"></div>
-              <div id="tags"></div>
-              <div id="untagged"></div>
-            </section>
+            </div>
+          </section>
 
-            <section class="card panel" id="attn-card" aria-labelledby="unresolved-title">
-              <div class="panel-head">
-                <h2 id="unresolved-title">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5"/><circle cx="12" cy="17.2" r=".7" fill="currentColor" stroke="none"/></svg>
-                  Needs attention
-                </h2>
-                <span class="count-pill" id="attn-count">0</span>
-              </div>
-              <div id="unresolved"></div>
-            </section>
-          </div>
-        </div>
+          <section class="view" id="view-attention" data-page="attention">
+            <div class="attention-grid">
+              <section class="card panel" aria-labelledby="unresolved-title">
+                <div class="panel-head">
+                  <h2 id="unresolved-title">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5"/><circle cx="12" cy="17.2" r=".7" fill="currentColor" stroke="none"/></svg>
+                    Could not review
+                  </h2>
+                  <span class="count-pill" id="attn-count">0</span>
+                </div>
+                <div id="unresolved"></div>
+              </section>
 
-        <section id="empty" class="card empty-state" hidden>
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
-          <h3>No matching items</h3>
-          <p>No files were found in that folder. Nothing was changed.</p>
-        </section>
+              <section class="card panel" aria-labelledby="untagged-title">
+                <div class="panel-head">
+                  <h2 id="untagged-title">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 13.2 12.8 21 3 11.2V3h8.2l9.3 9.3a1.3 1.3 0 0 1 0 .9Z"/><circle cx="7.5" cy="7.5" r="1.1"/></svg>
+                    No tag proposed
+                  </h2>
+                  <span class="count-pill" id="untagged-count">0</span>
+                </div>
+                <div id="untagged"></div>
+              </section>
+            </div>
+          </section>
 
-        <div id="actionbar" class="actionbar">
-          <div class="summary" id="ab-summary">
-            <span id="ab-selecting"><strong id="selected-count">0</strong> of <span id="total-count">0</span> tags selected</span>
-            <span id="ab-done" hidden><strong id="applied-count">0</strong> tags applied · tag record saved</span>
-          </div>
-          <div class="actions">
-            <button type="button" class="btn ghost" id="again" hidden>Review another folder</button>
-            <button type="button" class="btn ghost" id="clear">Clear</button>
-            <button type="button" class="btn primary" id="approve" disabled>Approve selected</button>
-          </div>
+          <section id="empty" class="card empty-state" hidden>
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
+            <h3>No matching items</h3>
+            <p>No files were found in that folder. Nothing was changed.</p>
+          </section>
         </div>
 
         <footer class="page-foot">
-          Local simulation · reviewed files are never modified · approved tags are recorded in <span class="mono">archivewise-tags.json</span>
+          Local simulation &middot; reviewed files are never modified &middot; approved tags are recorded in <span class="mono">archivewise-tags.json</span>
         </footer>
       </section>
+
     </div>
   </main>
 </div>
@@ -695,10 +774,49 @@
   </div>
 </div>
 
+<div class="overlay" id="browse-modal" hidden>
+  <div class="dialog browse-dialog" role="dialog" aria-modal="true" aria-labelledby="browse-title">
+    <div class="dialog-head">
+      <h2 id="browse-title">Choose a folder</h2>
+      <button class="win-btn" type="button" id="browse-close" aria-label="Close">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="browse-toolbar">
+      <button class="btn ghost" type="button" id="browse-home">Home</button>
+      <button class="btn ghost" type="button" id="browse-up">Up</button>
+      <input id="browse-path" class="mono" type="text" readonly aria-label="Current folder">
+    </div>
+    <div class="browse-drives" id="browse-drives"></div>
+    <div class="browse-list" id="browse-list"></div>
+    <div class="dialog-actions">
+      <button class="btn ghost" type="button" id="browse-cancel">Cancel</button>
+      <button class="btn primary" type="button" id="browse-select">Use this folder</button>
+    </div>
+  </div>
+</div>
+
 <script>
   const $ = (selector) => document.querySelector(selector);
-  const state = { data: null, selected: new Set(), applied: false, busy: false, applying: false };
+  const state = {
+    data: null,
+    selected: new Set(),
+    applied: false,
+    busy: false,
+    applying: false,
+    page: 'overview',
+  };
   let loadToken = 0;
+  let browsePath = '';
+  let browseParent = null;
+
+  const PAGES = {
+    overview: ['Overview', 'Review the folder before you change anything.'],
+    duplicates: ['Duplicates', 'Groups returned by the duplicate scan.'],
+    documents: ['Documents', 'Fields extracted from your documents, with sources.'],
+    tags: ['Tags', 'Choose the exact tags to apply.'],
+    attention: ['Needs attention', 'Items that could not be fully reviewed.'],
+  };
 
   const icons = {
     file: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 2.8h8l4 4v14.4H6z"/><path d="M14 2.8v4h4"/></svg>',
@@ -729,8 +847,8 @@
     $('#browse').disabled = busy;
     $('#analyze').setAttribute('aria-busy', String(busy));
     if (busy) {
-      setMode('Analyzing…', 'busy');
-      $('#analyze').textContent = 'Analyzing…';
+      setMode('Analyzing...', 'busy');
+      $('#analyze').textContent = 'Analyzing...';
     } else {
       setMode('Ready', '');
       $('#analyze').innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg> Analyze';
@@ -793,12 +911,17 @@
   function render(data) {
     $('#folder').value = data.folder;
     const hasFiles = data.files > 0;
+    const attention = data.skipped.length + data.untagged.length;
     $('#summary').hidden = !hasFiles;
-    $('#content').hidden = !hasFiles;
+    $('#stats-hint').hidden = !hasFiles;
+    $('#content').hidden = false;
     $('#empty').hidden = hasFiles;
     $('#actionbar').classList.toggle('on', hasFiles && data.proposals.length > 0);
-    $('#content-scroll').scrollTop = 0;
-    setActive('top');
+    $('#scope-folder').textContent = data.folder;
+    $('#scope-folder').title = data.folder;
+    $('#side-folder').textContent = data.folder;
+    $('#side-folder').title = data.folder;
+    showPage('overview');
     if (!hasFiles) {
       setMode('Ready', '');
       return;
@@ -808,16 +931,15 @@
     $('#stat-groups').textContent = data.groups.length;
     $('#stat-docs').textContent = data.findings.length;
     $('#stat-tags').textContent = data.proposals.length;
-    $('#stat-attn').textContent = data.skipped.length;
+    $('#stat-attn').textContent = attention;
     $('#dupes-count').textContent = data.groups.length;
     $('#findings-count').textContent = data.findings.length;
     $('#attn-count').textContent = data.skipped.length;
+    $('#untagged-count').textContent = data.untagged.length;
     $('#side-groups').textContent = data.groups.length;
     $('#side-docs').textContent = data.findings.length;
     $('#side-tags').textContent = data.proposals.length;
-    $('#side-attn').textContent = data.skipped.length;
-    $('#side-folder').textContent = data.folder;
-    $('#side-folder').title = data.folder;
+    $('#side-attn').textContent = attention;
     $('#total-count').textContent = data.proposals.length;
 
     renderGroups(data.groups);
@@ -839,7 +961,7 @@
           <span class="dup-title">Group ${index + 1}</span>
           <span class="dup-size">${esc(fmtSize(group.size))} each</span>
         </div>
-        <p class="dup-hash mono">sha256 ${esc(group.hash.slice(0, 20))}…</p>
+        <p class="dup-hash mono">sha256 ${esc(group.hash.slice(0, 20))}...</p>
         <ul class="file-list">
           ${group.members.map((member) => `<li>${icons.file}<span class="mono">${esc(member)}</span></li>`).join('')}
         </ul>
@@ -852,7 +974,7 @@
       root.innerHTML = '<p class="hint">No text documents were found, so no fields were extracted.</p>';
       return;
     }
-    const dash = (value) => value ? esc(value) : '<span class="missing">—</span>';
+    const dash = (value) => value ? esc(value) : '<span class="missing">-</span>';
     root.innerHTML = `
       <div class="table-wrap">
         <table>
@@ -901,15 +1023,13 @@
     }
 
     const untaggedRoot = $('#untagged');
+    $('#untagged-count').textContent = untagged.length;
     if (untagged.length) {
       untaggedRoot.innerHTML = `
-        <div class="untagged">
-          <div class="k">No tag proposed</div>
-          <ul>${untagged.map((file) => `<li class="mono">${esc(file)}</li>`).join('')}</ul>
-          <p class="hint">These files have no project field, so they stay unchanged.</p>
-        </div>`;
+        <ul class="plain-list">${untagged.map((file) => `<li class="mono">${esc(file)}</li>`).join('')}</ul>
+        <p class="hint">These files have no project field, so they stay unchanged.</p>`;
     } else {
-      untaggedRoot.innerHTML = '';
+      untaggedRoot.innerHTML = '<p class="hint">Every readable file has a tag proposal.</p>';
     }
   }
 
@@ -946,10 +1066,10 @@
     const button = $('#approve');
     state.applying = true;
     button.disabled = true;
-    button.textContent = 'Applying…';
+    button.textContent = 'Applying...';
     $('#analyze').disabled = true;
     $('#browse').disabled = true;
-    setMode('Applying tags…', 'busy');
+    setMode('Applying tags...', 'busy');
     showError('');
     try {
       const response = await fetch('/api/apply', {
@@ -977,7 +1097,7 @@
       $('#again').hidden = false;
       $('#clear').hidden = true;
       $('#approve').hidden = true;
-      setActive('tags-card');
+      showPage('tags');
       const result = $('#result');
       result.innerHTML = `<strong>${data.applied.length} tag${data.applied.length === 1 ? '' : 's'} applied.</strong>
         <div class="mono">${esc(data.tag_file)}</div>
@@ -1023,7 +1143,10 @@
   $('#restore').addEventListener('click', restoreWindow);
   $('#reopen').addEventListener('click', restoreWindow);
 
-  function openAbout() { $('#about-modal').hidden = false; }
+  function openAbout() {
+    $('#browse-modal').hidden = true;
+    $('#about-modal').hidden = false;
+  }
   function closeAbout() { $('#about-modal').hidden = true; }
   $('#win-about').addEventListener('click', openAbout);
   $('#about-close').addEventListener('click', closeAbout);
@@ -1032,68 +1155,48 @@
     if (event.target === $('#about-modal')) closeAbout();
   });
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') closeAbout();
+    if (event.key === 'Escape') {
+      closeAbout();
+      closeBrowser();
+    }
   });
 
-  function scrollTop() {
-    $('#content-scroll').scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  function setActive(target) {
-    document.querySelectorAll('[data-scroll]').forEach((element) => {
-      element.classList.toggle('active', element.dataset.scroll === target);
+  function showPage(name) {
+    if (!PAGES[name]) name = 'overview';
+    state.page = name;
+    document.querySelectorAll('.view').forEach((view) => {
+      view.classList.toggle('active', view.dataset.page === name);
     });
+    document.querySelectorAll('.dock-item[data-view], .side-item[data-view], .m-chip[data-view]').forEach((element) => {
+      element.classList.toggle('active', element.dataset.view === name);
+    });
+    $('#page-title').textContent = PAGES[name][0];
+    $('#page-sub').textContent = PAGES[name][1];
+    $('#scope-strip').hidden = name === 'overview' || !state.data;
+    $('#content-scroll').scrollTop = 0;
   }
 
-  let navLockUntil = 0;
-  function activate(target) {
-    setActive(target);
-    navLockUntil = Date.now() + 900;
-  }
+  document.querySelectorAll('[data-view]').forEach((element) => {
+    element.addEventListener('click', () => {
+      restoreWindow();
+      showPage(element.dataset.view);
+    });
+  });
 
   document.querySelectorAll('[data-action="about"]').forEach((button) => {
     button.addEventListener('click', openAbout);
   });
 
-  document.querySelectorAll('[data-scroll]').forEach((button) => {
-    button.addEventListener('click', () => {
-      restoreWindow();
-      const target = button.dataset.scroll;
-      activate(target);
-      if (target === 'top') {
-        scrollTop();
-      } else {
-        const element = document.getElementById(target);
-        if (element) element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    });
-  });
-
-  const contentScroll = $('#content-scroll');
-  let spyFrame = null;
-  contentScroll.addEventListener('scroll', () => {
-    if (spyFrame) return;
-    spyFrame = requestAnimationFrame(() => {
-      spyFrame = null;
-      if (Date.now() < navLockUntil) return;
-      if (contentScroll.scrollTop < 28) {
-        setActive('top');
-        return;
-      }
-      const base = contentScroll.getBoundingClientRect().top;
-      let current = 'top';
-      ['dupes-card', 'findings-card', 'tags-card', 'attn-card'].forEach((id) => {
-        const element = document.getElementById(id);
-        if (element && element.getBoundingClientRect().top - base <= 76) current = id;
-      });
-      setActive(current);
-    });
+  $('#scope-change').addEventListener('click', () => {
+    showPage('overview');
+    $('#folder').focus();
+    $('#folder').select();
   });
 
   $('#again').addEventListener('click', () => {
+    showPage('overview');
     $('#folder').focus();
     $('#folder').select();
-    scrollTop();
   });
 
   $('#launcher').addEventListener('click', () => document.body.classList.toggle('dock-hidden'));
@@ -1110,26 +1213,68 @@
     load($('#folder').value.trim());
   });
 
-  $('#browse').addEventListener('click', async () => {
-    const button = $('#browse');
-    button.disabled = true;
-    const original = button.innerHTML;
-    button.textContent = 'Opening…';
+  function openBrowser(startPath) {
+    $('#about-modal').hidden = true;
+    $('#browse-modal').hidden = false;
+    loadBrowse(startPath || (state.data ? state.data.folder : ''));
+  }
+
+  function closeBrowser() { $('#browse-modal').hidden = true; }
+
+  async function loadBrowse(path) {
+    const list = $('#browse-list');
+    list.innerHTML = '<div class="browse-empty">Loading...</div>';
+    $('#browse-drives').innerHTML = '';
     try {
-      const response = await fetch('/api/browse', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+      const response = await fetch('/api/browse?path=' + encodeURIComponent(path || ''));
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Folder picker unavailable.');
-      if (data.folder) {
-        $('#folder').value = data.folder;
-        await load(data.folder);
+      if (!response.ok) throw new Error(data.error || 'Could not read that folder.');
+      browsePath = data.path;
+      browseParent = data.parent;
+      $('#browse-path').value = data.path;
+      $('#browse-up').disabled = !data.parent;
+      if (data.drives.length) {
+        $('#browse-drives').innerHTML = data.drives.map((drive) =>
+          `<button type="button" class="browse-drive mono" data-path="${esc(drive)}">${esc(drive)}</button>`
+        ).join('');
+        $('#browse-drives').querySelectorAll('.browse-drive').forEach((button) => {
+          button.addEventListener('click', () => loadBrowse(button.dataset.path));
+        });
+      }
+      if (!data.directories.length) {
+        list.innerHTML = '<div class="browse-empty">No subfolders here.</div>';
+      } else {
+        list.innerHTML = data.directories.map((directory) => `
+          <button type="button" class="browse-item" data-path="${esc(directory.path)}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
+            <span class="mono">${esc(directory.name)}</span>
+          </button>`).join('');
+        list.querySelectorAll('.browse-item').forEach((button) => {
+          button.addEventListener('click', () => loadBrowse(button.dataset.path));
+        });
       }
     } catch (error) {
-      showError(error.message + ' Paste a folder path instead.');
-    } finally {
-      button.disabled = false;
-      button.innerHTML = original;
+      list.innerHTML = `<div class="browse-empty">${esc(error.message)}</div>`;
+      $('#browse-up').disabled = true;
     }
+  }
+
+  $('#browse-home').addEventListener('click', () => loadBrowse(''));
+  $('#browse-up').addEventListener('click', () => { if (browseParent) loadBrowse(browseParent); });
+  $('#browse-close').addEventListener('click', closeBrowser);
+  $('#browse-cancel').addEventListener('click', closeBrowser);
+  $('#browse-modal').addEventListener('click', (event) => {
+    if (event.target === $('#browse-modal')) closeBrowser();
   });
+  $('#browse-select').addEventListener('click', () => {
+    if (!browsePath) return;
+    const chosen = browsePath;
+    closeBrowser();
+    $('#folder').value = chosen;
+    load(chosen);
+  });
+
+  $('#browse').addEventListener('click', () => openBrowser($('#folder').value.trim()));
 
   $('#selectall').addEventListener('change', (event) => {
     if (!state.data) return;
@@ -1149,7 +1294,7 @@
 
   $('#approve').addEventListener('click', approve);
 
-  setActive('top');
+  showPage('overview');
   load('');
 </script>
 </body>

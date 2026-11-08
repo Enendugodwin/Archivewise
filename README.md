@@ -4,7 +4,7 @@
 
 ArchiveWise is a Uliya Skill for the UGREEN NAS Skill Hackathon 2026 (Track: **Automate Your Workflow**). It reviews one user-selected NAS folder, reports the duplicate groups returned by the NAS duplicate scan, extracts requested document facts with source evidence, and proposes tags. Nothing is tagged until the user approves the exact files and tag names.
 
-![ArchiveWise local GUI showing duplicate groups, document findings, and proposed tags](demo/archivewise-gui.png)
+![ArchiveWise local GUI overview](demo/archivewise-gui.png)
 
 ## What it does
 
@@ -55,7 +55,7 @@ The Skill itself runs inside UGREEN's NAS expert runtime. This repository includ
 python demo\gui_server.py
 ```
 
-It opens <http://127.0.0.1:8765/>. Load the sample folder, tick the tags you approve, and press **Approve selected**. Reviewed files are never modified; approved tags are recorded in `archivewise-tags.json` inside the reviewed folder.
+It opens <http://127.0.0.1:8765/>. Use the page navigation to inspect duplicates, documents, tags, and unresolved items. On the Tags page, tick the tags you approve and press **Approve selected**. Reviewed files are never modified; approved tags are recorded in `archivewise-tags.json` inside the reviewed folder.
 
 See [`demo/README.md`](demo/README.md) for GUI details, the CLI mode, and the demo's honest limits.
 

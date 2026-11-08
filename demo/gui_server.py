@@ -11,7 +11,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import subprocess
 import threading
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -129,40 +128,40 @@ def apply_selection(folder: Path, selected: list[int]) -> dict:
     return {"applied": applied, "failed": failed, "tag_file": str(tag_path)}
 
 
-def pick_folder() -> str | None:
-    """Open a native folder picker on the machine running the server."""
+def list_directories(raw: str | None) -> dict:
+    """List subdirectories for the in-app folder browser."""
+    value = (raw or "").strip()
+    path = Path(value).expanduser() if value else Path.home()
+    path = path.resolve()
+    if not path.is_dir():
+        raise ValueError(f"Not a folder: {path}")
+    directories = []
+    try:
+        with os.scandir(path) as entries:
+            for entry in entries:
+                try:
+                    if entry.is_dir():
+                        directories.append(
+                            {"name": entry.name, "path": str(Path(entry.path).resolve())}
+                        )
+                except OSError:
+                    continue
+    except OSError as error:
+        raise ValueError(f"Cannot read folder: {error}") from error
+    directories.sort(key=lambda item: item["name"].casefold())
+    drives = []
     if os.name == "nt":
-        script = (
-            "Add-Type -AssemblyName System.Windows.Forms;"
-            "$d = New-Object System.Windows.Forms.FolderBrowserDialog;"
-            "$d.Description = 'Choose a folder for ArchiveWise';"
-            "$d.ShowNewFolderButton = $false;"
-            "if ($d.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {"
-            "[Console]::Out.Write($d.SelectedPath) }"
-        )
-        try:
-            result = subprocess.run(
-                ["powershell", "-NoProfile", "-STA", "-WindowStyle", "Hidden", "-Command", script],
-                capture_output=True,
-                text=True,
-                timeout=300,
-            )
-        except (OSError, subprocess.SubprocessError) as error:
-            raise RuntimeError(f"Folder picker unavailable: {error}") from error
-        return result.stdout.strip() or None
-
-    try:  # pragma: no cover - non-Windows fallback
-        import tkinter as tk
-        from tkinter import filedialog
-
-        root = tk.Tk()
-        root.withdraw()
-        root.attributes("-topmost", True)
-        folder = filedialog.askdirectory(title="Choose a folder for ArchiveWise")
-        root.destroy()
-        return folder or None
-    except Exception as error:  # pragma: no cover
-        raise RuntimeError(f"Folder picker unavailable: {error}") from error
+        for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+            root = Path(f"{letter}:\\")
+            if root.exists():
+                drives.append(str(root))
+    parent = str(path.parent) if path.parent != path else None
+    return {
+        "path": str(path),
+        "parent": parent,
+        "directories": directories[:500],
+        "drives": drives,
+    }
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -195,6 +194,13 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._send(200, body, "text/html; charset=utf-8")
             return
+        if parsed.path == "/api/browse":
+            path_value = parse_qs(parsed.query).get("path", [""])[0]
+            try:
+                self._json(200, list_directories(path_value))
+            except ValueError as error:
+                self._error(400, str(error))
+            return
         if parsed.path == "/api/review":
             folder_value = parse_qs(parsed.query).get("folder", [""])[0]
             try:
@@ -219,13 +225,6 @@ class Handler(BaseHTTPRequestHandler):
             payload = json.loads(self.rfile.read(length) or b"{}")
         except json.JSONDecodeError:
             self._error(400, "Invalid JSON")
-            return
-
-        if parsed.path == "/api/browse":
-            try:
-                self._json(200, {"folder": pick_folder()})
-            except RuntimeError as error:
-                self._error(501, str(error))
             return
 
         if parsed.path == "/api/apply":
