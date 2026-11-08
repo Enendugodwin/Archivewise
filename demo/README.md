@@ -4,6 +4,8 @@ The submitted Skill (`archivewise/`) is a Uliya orchestration package. Its real 
 
 This folder is a **local simulator** of the review and approval experience. It calls no NAS capability, and it is not part of the submitted ZIP. It exists so you can try the flow on this PC before NAS access is available.
 
+![ArchiveWise local GUI showing duplicate groups, document findings, and proposed tags](archivewise-gui.png)
+
 ## Launch the GUI
 
 ```powershell
