@@ -86,8 +86,10 @@
   .dock {
     position: fixed; z-index: 55; left: 16px; top: 72px;
     width: 70px; display: flex; flex-direction: column; align-items: center; gap: 15px;
+    max-height: calc(100vh - 90px); overflow-y: auto; scrollbar-width: none;
     transition: opacity .18s ease, transform .18s ease;
   }
+  .dock::-webkit-scrollbar { display: none; }
   body.dock-hidden .dock { opacity: 0; pointer-events: none; transform: translateX(-10px); }
   .dock-item {
     width: 64px; border: 0; background: none; padding: 0; color: #fff;
@@ -107,8 +109,10 @@
   }
   .dock-item.active .dock-label { font-weight: 700; }
   .ic-app { background: linear-gradient(145deg, #4f8ef7, #1d4ed8); }
-  .ic-files { background: linear-gradient(145deg, #6aa9ff, #2563eb); }
-  .ic-search { background: linear-gradient(145deg, #a78bfa, #6d28d9); }
+  .ic-dupes { background: linear-gradient(145deg, #fb923c, #ea580c); }
+  .ic-docs { background: linear-gradient(145deg, #34d399, #059669); }
+  .ic-tags { background: linear-gradient(145deg, #f472b6, #db2777); }
+  .ic-attn { background: linear-gradient(145deg, #f87171, #dc2626); }
   .ic-help { background: linear-gradient(145deg, #fbbf24, #d97706); }
   .ic-github { background: linear-gradient(145deg, #475569, #111827); }
 
@@ -131,7 +135,7 @@
   }
   .window.is-min, .window.is-closed { opacity: 0; transform: scale(.985); pointer-events: none; }
   .window.is-max {
-    position: fixed; z-index: 50; inset: 48px 10px 10px 10px;
+    position: fixed; z-index: 58; inset: 48px 10px 10px 10px;
     width: auto; height: auto; max-width: none; max-height: none;
   }
   .titlebar {
@@ -202,6 +206,13 @@
   .page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
   .page-head h1 { margin: 0; font-size: 19px; font-weight: 600; letter-spacing: -.01em; }
   .page-head p { margin: 2px 0 0; color: var(--muted); font-size: 12px; }
+  .mobile-nav { display: none; gap: 6px; overflow-x: auto; padding: 0 0 10px; scrollbar-width: none; }
+  .mobile-nav::-webkit-scrollbar { display: none; }
+  .m-chip {
+    border: 1px solid var(--line); background: #fff; color: #4b5563;
+    border-radius: 999px; padding: 5px 10px; font-size: 11.5px; white-space: nowrap;
+  }
+  .m-chip.active { background: var(--blue-soft); border-color: var(--blue-border); color: var(--blue-600); font-weight: 600; }
   .status-pill {
     display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px;
     border-radius: 999px; background: #f0f2f5; color: #4b5563;
@@ -389,6 +400,8 @@
     .content { padding: 14px 13px 0; }
     .actionbar { margin-left: -13px; margin-right: -13px; padding: 10px 13px; }
     .dock { display: none; }
+    .launcher { display: none; }
+    .mobile-nav { display: flex; }
     .statusbar .net-text { display: none; }
     .folder-row { flex-wrap: wrap; }
     .folder-row input { flex-basis: 100%; }
@@ -397,6 +410,7 @@
     .window.is-max { inset: 38px 4px 4px; }
     .actionbar { flex-direction: column; align-items: stretch; gap: 8px; }
     .actionbar .actions { display: grid; grid-template-columns: 1fr 1.4fr; }
+    .actionbar .actions #again { grid-column: 1 / -1; }
   }
   @media (prefers-reduced-motion: reduce) {
     * { animation: none !important; transition: none !important; }
@@ -415,24 +429,36 @@
   <button class="avatar" type="button" title="Local demo user" aria-label="Local demo user">AW</button>
 </div>
 
-<nav class="dock" id="dock" aria-label="Applications">
-  <button class="dock-item active" type="button" data-action="home" title="ArchiveWise">
+<nav class="dock" id="dock" aria-label="Application sections">
+  <button class="dock-item active" type="button" data-scroll="top" title="Overview">
     <span class="dock-icon ic-app">
       <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5h17v11a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-11Z"/><path d="M2.5 4.5h19v3h-19z"/><path d="M10 12h4"/></svg>
     </span>
     <span class="dock-label">ArchiveWise</span>
   </button>
-  <button class="dock-item" type="button" data-action="browse" title="Browse folders">
-    <span class="dock-icon ic-files">
-      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
+  <button class="dock-item" type="button" data-scroll="dupes-card" title="Duplicate groups">
+    <span class="dock-icon ic-dupes">
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
     </span>
-    <span class="dock-label">Files</span>
+    <span class="dock-label">Duplicates</span>
   </button>
-  <button class="dock-item" type="button" data-action="search" title="Jump to folder input">
-    <span class="dock-icon ic-search">
-      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+  <button class="dock-item" type="button" data-scroll="findings-card" title="Document findings">
+    <span class="dock-icon ic-docs">
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2.8h8l4 4v14.4H6z"/><path d="M14 2.8v4h4"/><path d="M9 12h6M9 15.5h6"/></svg>
     </span>
-    <span class="dock-label">Search</span>
+    <span class="dock-label">Documents</span>
+  </button>
+  <button class="dock-item" type="button" data-scroll="tags-card" title="Proposed tags">
+    <span class="dock-icon ic-tags">
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 13.2 12.8 21 3 11.2V3h8.2l9.3 9.3a1.3 1.3 0 0 1 0 .9Z"/><circle cx="7.5" cy="7.5" r="1.1"/></svg>
+    </span>
+    <span class="dock-label">Tags</span>
+  </button>
+  <button class="dock-item" type="button" data-scroll="attn-card" title="Needs attention">
+    <span class="dock-icon ic-attn">
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5"/><circle cx="12" cy="17.2" r=".7" fill="currentColor" stroke="none"/></svg>
+    </span>
+    <span class="dock-label">Attention</span>
   </button>
   <button class="dock-item" type="button" data-action="about" title="About this demo">
     <span class="dock-icon ic-help">
@@ -512,6 +538,14 @@
           </div>
           <span class="status-pill" id="mode-pill">Ready</span>
         </div>
+
+        <nav class="mobile-nav" aria-label="Sections">
+          <button class="m-chip active" type="button" data-scroll="top">Overview</button>
+          <button class="m-chip" type="button" data-scroll="dupes-card">Duplicates</button>
+          <button class="m-chip" type="button" data-scroll="findings-card">Documents</button>
+          <button class="m-chip" type="button" data-scroll="tags-card">Tags</button>
+          <button class="m-chip" type="button" data-scroll="attn-card">Attention</button>
+        </nav>
 
         <section class="card folder-card" aria-labelledby="folder-label">
           <form id="folder-form">
@@ -603,8 +637,12 @@
         </section>
 
         <div id="actionbar" class="actionbar">
-          <div class="summary"><strong id="selected-count">0</strong> of <span id="total-count">0</span> tags selected</div>
+          <div class="summary" id="ab-summary">
+            <span id="ab-selecting"><strong id="selected-count">0</strong> of <span id="total-count">0</span> tags selected</span>
+            <span id="ab-done" hidden><strong id="applied-count">0</strong> tags applied · tag record saved</span>
+          </div>
           <div class="actions">
+            <button type="button" class="btn ghost" id="again" hidden>Review another folder</button>
             <button type="button" class="btn ghost" id="clear">Clear</button>
             <button type="button" class="btn primary" id="approve" disabled>Approve selected</button>
           </div>
@@ -659,7 +697,8 @@
 
 <script>
   const $ = (selector) => document.querySelector(selector);
-  const state = { data: null, selected: new Set(), applied: false, busy: false };
+  const state = { data: null, selected: new Set(), applied: false, busy: false, applying: false };
+  let loadToken = 0;
 
   const icons = {
     file: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 2.8h8l4 4v14.4H6z"/><path d="M14 2.8v4h4"/></svg>',
@@ -704,33 +743,50 @@
     box.classList.toggle('on', Boolean(message));
   }
 
+  function resetActionBar() {
+    $('#ab-selecting').hidden = false;
+    $('#ab-done').hidden = true;
+    $('#again').hidden = true;
+    $('#clear').hidden = false;
+    $('#approve').hidden = false;
+    $('#clear').disabled = false;
+  }
+
   async function load(folder) {
-    if (state.busy) return;
+    if (state.applying) {
+      showError('A tag action is still completing. Wait for it to finish.');
+      return;
+    }
+    const token = ++loadToken;
     setBusy(true);
     showError('');
     $('#result').classList.remove('on');
     state.applied = false;
+    state.selected.clear();
+    resetActionBar();
+    $('#selectall').disabled = false;
+    $('#selectall').checked = false;
     let failed = false;
     try {
       const response = await fetch('/api/review?folder=' + encodeURIComponent(folder || ''));
       const data = await response.json();
+      if (token !== loadToken) return;
       if (!response.ok) throw new Error(data.error || 'Could not read that folder.');
       state.data = data;
-      state.selected.clear();
-      $('#selectall').disabled = false;
-      $('#selectall').checked = false;
-      $('#clear').disabled = false;
       if (!folder) $('#folder').value = data.folder;
       render(data);
     } catch (error) {
+      if (token !== loadToken) return;
       failed = true;
       showError(error.message || String(error));
       $('#summary').hidden = true;
       $('#content').hidden = true;
       $('#actionbar').classList.remove('on');
     } finally {
-      setBusy(false);
-      if (failed) setMode('Error', 'error');
+      if (token === loadToken) {
+        setBusy(false);
+        if (failed) setMode('Error', 'error');
+      }
     }
   }
 
@@ -741,6 +797,8 @@
     $('#content').hidden = !hasFiles;
     $('#empty').hidden = hasFiles;
     $('#actionbar').classList.toggle('on', hasFiles && data.proposals.length > 0);
+    $('#content-scroll').scrollTop = 0;
+    setActive('top');
     if (!hasFiles) {
       setMode('Ready', '');
       return;
@@ -882,19 +940,25 @@
   }
 
   async function approve() {
-    if (!state.data || state.selected.size === 0 || state.applied) return;
+    if (!state.data || state.selected.size === 0 || state.applied || state.applying) return;
+    const folder = state.data.folder;
+    const token = loadToken;
     const button = $('#approve');
+    state.applying = true;
     button.disabled = true;
     button.textContent = 'Applying…';
+    $('#analyze').disabled = true;
+    $('#browse').disabled = true;
     setMode('Applying tags…', 'busy');
     showError('');
     try {
       const response = await fetch('/api/apply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ folder: state.data.folder, selected: [...state.selected] })
+        body: JSON.stringify({ folder, selected: [...state.selected] })
       });
       const data = await response.json();
+      if (token !== loadToken || !state.data || state.data.folder !== folder) return;
       if (!response.ok) throw new Error(data.error || 'Could not apply the tags.');
       state.applied = true;
       setMode('Tags applied', 'done');
@@ -907,6 +971,13 @@
       });
       $('#selectall').disabled = true;
       $('#clear').disabled = true;
+      $('#ab-selecting').hidden = true;
+      $('#ab-done').hidden = false;
+      $('#applied-count').textContent = data.applied.length;
+      $('#again').hidden = false;
+      $('#clear').hidden = true;
+      $('#approve').hidden = true;
+      setActive('tags-card');
       const result = $('#result');
       result.innerHTML = `<strong>${data.applied.length} tag${data.applied.length === 1 ? '' : 's'} applied.</strong>
         <div class="mono">${esc(data.tag_file)}</div>
@@ -916,10 +987,15 @@
       updateSelection();
       button.textContent = 'Applied';
     } catch (error) {
+      if (token !== loadToken) return;
       showError(error.message || String(error));
       setMode('Error', 'error');
       button.disabled = false;
       updateSelection();
+    } finally {
+      state.applying = false;
+      $('#analyze').disabled = false;
+      $('#browse').disabled = false;
     }
   }
 
@@ -963,21 +1039,27 @@
     $('#content-scroll').scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  document.querySelectorAll('[data-action]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const action = button.dataset.action;
-      if (action === 'home') { restoreWindow(); scrollTop(); }
-      if (action === 'browse') { restoreWindow(); $('#browse').click(); }
-      if (action === 'search') { restoreWindow(); $('#folder').focus(); $('#folder').select(); }
-      if (action === 'about') { openAbout(); }
+  function setActive(target) {
+    document.querySelectorAll('[data-scroll]').forEach((element) => {
+      element.classList.toggle('active', element.dataset.scroll === target);
     });
+  }
+
+  let navLockUntil = 0;
+  function activate(target) {
+    setActive(target);
+    navLockUntil = Date.now() + 900;
+  }
+
+  document.querySelectorAll('[data-action="about"]').forEach((button) => {
+    button.addEventListener('click', openAbout);
   });
 
   document.querySelectorAll('[data-scroll]').forEach((button) => {
     button.addEventListener('click', () => {
-      document.querySelectorAll('.side-item').forEach((item) => item.classList.remove('active'));
-      button.classList.add('active');
+      restoreWindow();
       const target = button.dataset.scroll;
+      activate(target);
       if (target === 'top') {
         scrollTop();
       } else {
@@ -985,6 +1067,33 @@
         if (element) element.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     });
+  });
+
+  const contentScroll = $('#content-scroll');
+  let spyFrame = null;
+  contentScroll.addEventListener('scroll', () => {
+    if (spyFrame) return;
+    spyFrame = requestAnimationFrame(() => {
+      spyFrame = null;
+      if (Date.now() < navLockUntil) return;
+      if (contentScroll.scrollTop < 28) {
+        setActive('top');
+        return;
+      }
+      const base = contentScroll.getBoundingClientRect().top;
+      let current = 'top';
+      ['dupes-card', 'findings-card', 'tags-card', 'attn-card'].forEach((id) => {
+        const element = document.getElementById(id);
+        if (element && element.getBoundingClientRect().top - base <= 76) current = id;
+      });
+      setActive(current);
+    });
+  });
+
+  $('#again').addEventListener('click', () => {
+    $('#folder').focus();
+    $('#folder').select();
+    scrollTop();
   });
 
   $('#launcher').addEventListener('click', () => document.body.classList.toggle('dock-hidden'));
@@ -1040,6 +1149,7 @@
 
   $('#approve').addEventListener('click', approve);
 
+  setActive('top');
   load('');
 </script>
 </body>
