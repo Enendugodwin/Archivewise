@@ -35,6 +35,8 @@ The browser opens at <http://127.0.0.1:8765/>.
 4. On the **Tags** page, tick the tags you approve and press **Approve selected**.
 5. Approved tags are recorded in `archivewise-tags.json` inside the reviewed folder.
 
+The folder browser opens at the parent of the current folder and lists local/removable drives only. Disconnected network drives are skipped so the picker cannot hang.
+
 ![Tags page with the approval bar](archivewise-pages-tags.png)
 
 ![Archive suggestions page](archivewise-pages-archive.png)

@@ -21,7 +21,7 @@ ArchiveWise is a Uliya Skill for the UGREEN NAS Skill Hackathon 2026 (Track: **A
 
 ## Screenshots
 
-The GUI opens on the Overview page above; every Review item has its own page. The demo recognizes the top 20 common file extensions, extracts text, Word, Excel, PowerPoint, HTML, CSV, RTF, JSON, XML, Markdown, and optional PDF documents, and identifies images, video, and audio.
+The GUI opens on the Overview page above; every Review item has its own page. The demo recognizes the top 20 common file extensions, extracts text, Word, Excel, PowerPoint, HTML, CSV, RTF, JSON, XML, Markdown, and optional PDF documents, and identifies images, video, and audio. The folder browser opens at the parent of the current folder and lists local drives only.
 
 <p align="center">
   <img src="demo/archivewise-pages-duplicates.png" width="49%" alt="Duplicates page">

@@ -2,6 +2,15 @@
 
 This guide is for instructors and reviewers who want to run the local ArchiveWise demo and inspect the Round 1 submission. It is not required for the NAS Skill runtime.
 
+## What this build includes
+
+- **Separate pages** for Overview, Duplicates, Documents, Tags, Archive, and Needs attention.
+- **Top 20 file type recognition**: PDF, DOCX, DOC, XLSX, XLS, PPTX, PPT, TXT, CSV, MD, JSON, XML, HTML, RTF, JPG, JPEG, PNG, GIF, MP4, and MP3.
+- **Documents** extracts text, Word, Excel, PowerPoint, HTML, CSV, RTF, JSON, XML, and Markdown. PDF is optional via `pypdf`. Images, video, and audio appear under **Other files recognized**.
+- **Tags** proposes project tags plus generic `image`, `video`, and `audio` type tags.
+- **Archive** lists read-only archive suggestions and duplicate groups to resolve. No files are moved.
+- **Browse** opens an in-app folder browser at the parent of the current folder. It lists local and removable drives only; disconnected network drives are excluded so the picker cannot hang.
+
 ## 1. Prerequisites
 
 - Windows 10/11, macOS, or Linux
@@ -149,7 +158,7 @@ The checker is read-only. It validates the package structure and catalog mapping
 | `python` is not recognized | Install Python 3.12 and enable "Add python.exe to PATH". Try `py -3` instead. |
 | Port 8765 is already in use | Run `python demo\gui_server.py --port 9000`. |
 | The browser does not open | Open <http://127.0.0.1:8765/> manually, or use `--no-browser`. |
-| Browse shows no subfolders | That folder has no subfolders. Use **Home** or **Up**, or paste a path. |
+| Browse shows no subfolders | The picker opens at the parent of the current folder. Use **Home** or **Up**, or select a subfolder. Disconnected network drives are not listed. |
 | The page looks stale | Refresh; the server sends `Cache-Control: no-store`. |
 | The tag file is missing | It is inside the reviewed folder, named `archivewise-tags.json`. |
 | PDF is under "Needs attention" | Install optional PDF support: `python -m pip install -r demo\requirements.txt`. |
