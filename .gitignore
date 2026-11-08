@@ -1,0 +1,11 @@
+# Third-party UGREEN skill kit (provided for the hackathon; not redistributed here)
+uliya-skill-kit-0.7.3-en/
+
+# OS and editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Python bytecode
+__pycache__/
+*.py[cod]

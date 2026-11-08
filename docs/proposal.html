@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ArchiveWise — Round 1 Project Proposal</title>
+<style>
+  @page { size: A4; margin: 16mm 17mm 15mm 17mm; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-size: 10.2pt;
+    line-height: 1.42;
+    color: #1c2430;
+  }
+  header { border-bottom: 2.5px solid #14505c; padding-bottom: 9px; margin-bottom: 14px; }
+  h1 { margin: 0 0 6px; font-size: 20pt; line-height: 1.15; color: #103b46; letter-spacing: -0.2px; }
+  .meta { margin: 3px 0 0; font-size: 9.2pt; color: #4b5a66; }
+  .meta strong { color: #14505c; }
+  .qa { margin: 0 0 9px; page-break-inside: avoid; }
+  h2 {
+    margin: 0 0 3px;
+    font-size: 10pt;
+    line-height: 1.3;
+    color: #14505c;
+    font-weight: 600;
+  }
+  .num {
+    display: inline-block;
+    min-width: 19px;
+    margin-right: 5px;
+    font-size: 8.4pt;
+    font-weight: 700;
+    color: #ffffff;
+    background: #14505c;
+    text-align: center;
+    border-radius: 3px;
+    padding: 1px 3px;
+    vertical-align: 1px;
+  }
+  p { margin: 0; text-align: left; }
+  .rule { border: 0; border-top: 1px solid #c8d3d8; margin: 12px 0 10px; }
+  .small { font-size: 9.1pt; color: #4b5a66; margin-bottom: 5px; }
+  .disc h2 { font-size: 10.4pt; margin-bottom: 3px; }
+  .disc ul { margin: 0; padding-left: 17px; }
+  .disc li { margin: 0 0 3px; font-size: 8.9pt; line-height: 1.35; }
+  .disc strong { color: #14505c; }
+  footer { margin-top: 8px; font-size: 8.2pt; color: #7a8791; }
+</style>
+</head>
+<body>
+<header>
+  <h1>ArchiveWise — Round 1 Project Proposal</h1>
+  <p class="meta"><strong>UGREEN NAS Skill Hackathon 2026 · Track: Automate Your Workflow</strong></p>
+  <p class="meta">Round 1 submission · Project Proposal (PDF) · Ten substantive answers: 455 words (limit: 500)</p>
+</header>
+<section class="qa"><h2><span class="num">1</span>One sentence: What does the Skill do?</h2><p>ArchiveWise reviews one NAS folder, shows the duplicate groups and document facts it can prove, and, only after explicit approval, tags selected files.</p></section><section class="qa"><h2><span class="num">2</span>Who is the target user and problem?</h2><p>Home and small-team NAS users whose Downloads or project folders collect duplicates and documents they no longer recognize. They open files one by one to learn what they are, fearing cleanup will move or remove the wrong item.</p></section><section class="qa"><h2><span class="num">3</span>What is your proposed solution?</h2><p>One guided review replaces guesswork. ArchiveWise lists the folder, runs the NAS duplicate scan, optionally extracts requested document facts with source evidence, and presents duplicates, findings, and proposed tags. The user approves exact files and tags. ArchiveWise applies only those tags, reports per-file results, and changes nothing else.</p></section><section class="qa"><h2><span class="num">4</span>What is the Core User Flow?</h2><p>The user names a folder and goal. ArchiveWise confirms the folder, purpose, and fields. It lists files, scans duplicates, extracts fields from returned paths, and presents one review with proposed tags. It waits for approval, applies approved tags, and summarizes completed, failed, and unresolved items.</p></section><section class="qa"><h2><span class="num">5</span>What substantive difference does your idea offer compared with existing tools or conventional AI solutions?</h2><p>Dedupe utilities pick a keeper and push deletion; assistants cannot safely act on NAS files. ArchiveWise keeps the decision with the user and ties every recommendation to a NAS result. It preserves every file, never deletes or moves, and reports partial outcomes honestly. It unites duplicate review, document understanding, and approved tagging.</p></section><section class="qa"><h2><span class="num">6</span>Which UGREEN AI NAS capabilities will be used, and at which step in the workflow?</h2><p>Step 2: ug-filesystem (ls, find, stat) lists the scoped folder. Step 3: ug-filemgr (scan-dedupe) returns duplicate groups. Step 4: ug-document (extract, qa) extracts document facts with source evidence. Step 6: ug-filemgr (tag-get-by-name, tag-add, tag-add-file) applies approved tags.</p></section><section class="qa"><h2><span class="num">7</span>What was your technical approach? Describe the planned Skill workflow, supported NAS CLI capabilities, expert agent orchestration, required inputs, permissions, AI model choices, and data handling, as applicable;</h2><p>ArchiveWise is orchestration-only. SKILL.md delegates self-contained tasks to file-agent and document-agent; it never invokes NAS CLIs directly. Reads precede writes, and only real returned paths flow to extraction. Catalog approvals and permissions are respected; a pending gate is reported as waiting_approval, not assumed. Document understanding uses the NAS document capability and local AI; the Skill adds no external service, upload, or credential, and content stays local.</p></section><section class="qa"><h2><span class="num">8</span>What is the current development status? Identify what was implemented already, not yet implemented, or is pending NAS validation if selected to be a Finalist.</h2><p>Implemented: the complete Skill package, catalog mapping for three CLIs, the review template, three case definitions, and a clean bundled checker run. The Round 1 scope is fully implemented. Pending NAS validation: duplicate-group shape, tag idempotency, and approval timing. File moves are deferred.</p></section><section class="qa"><h2><span class="num">9</span>What is your final validation plan? Name two core test cases and one edge case to validate if selected as a Finalist.</h2><p>Core one: a folder with known duplicates must report only returned groups and change nothing before approval. Core two: sample project documents must yield fields with source names, and only approved files receive the proposed tag. Edge case: one unreadable file and one unextractable document must be disclosed, and dependent actions must stop.</p></section><section class="qa"><h2><span class="num">10</span>Are there any known limitations of your Project? Describe current known limitations, technical risks, and any external dependencies.</h2><p>Round 1 is statically validated, without NAS runtime evidence. Users choose the keeper. Extraction quality depends on NAS document support and file legibility. Tag creation and application depend on platform approvals. Moving or archiving files is deferred, and the Skill does not delete, compress, schedule, or scan the whole NAS.</p></section>
+<hr class="rule">
+<section class="disc">
+  <h2>Third-party components, licenses, and data flows</h2>
+  <p class="small">Excluded from the 500-word limit, per the Official Rules.</p>
+  <ul><li><strong>UGREEN Uliya Skill Creation Tool, kit version 0.7.3.</strong> Provided by UGREEN with the Hackathon Starter Kit (https://ai.ugreen.com/pages/hackathon-starter-kit). Used to structure the Skill and run the bundled static checker. Used under the UGREEN Hackathon developer package terms.</li><li><strong>OpenCode AI coding assistant.</strong> Source: https://github.com/sst/opencode. License: MIT. Used for drafting the Skill, reviewing catalog mappings, and running the local static checker.</li><li><strong>Bundled third-party material.</strong> No third-party SDKs, libraries, model weights, or datasets are bundled in the Skill package.</li><li><strong>External services and data flows.</strong> The Skill adds none. It delegates only to registered NAS experts and adds no network call, telemetry, credential, or API key. Document understanding uses the NAS document capability and local AI model; folder content remains on the NAS.</li></ul>
+</section>
+<footer>ArchiveWise · Preparation for Round 1 · Local static validation only; no NAS runtime claim.</footer>
+</body>
+</html>

@@ -1,0 +1,26 @@
+﻿{
+  "checkFormatVersion": "2.0.0",
+  "status": "static-pass",
+  "target": {
+    "skillName": "archivewise"
+  },
+  "catalog": {
+    "checkedVersion": "2.0.0"
+  },
+  "files": [
+    {
+      "path": "references/review-format.md",
+      "sha256": "2ae0ff78eb9785ddca770190154d95f5580f334a6ab8fea4157b1def7d7b014d"
+    },
+    {
+      "path": "SKILL.md",
+      "sha256": "a5bfc0ad0344891518157922dde20265cc7062552babd595b9fe000a7e63f322"
+    }
+  ],
+  "summary": {
+    "errors": 0,
+    "warnings": 0,
+    "info": 0
+  },
+  "diagnostics": []
+}
