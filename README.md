@@ -29,7 +29,7 @@ ArchiveWise is a Uliya Skill for the UGREEN NAS Skill Hackathon 2026 (Track: **A
 | Check | Result |
 |---|---|
 | Bundled Uliya checker | **`static-pass`** — 0 errors, 0 warnings, 0 info |
-| Package | 3 files, 15,609 bytes uncompressed, 6,616-byte ZIP |
+| Package | 3 files, 15,609 bytes uncompressed, 6,622-byte ZIP |
 | Proposal | 445 words for the ten prompts, 2 pages |
 | Runtime | No NAS runtime claim; real behavior requires finalist NAS testing |
 

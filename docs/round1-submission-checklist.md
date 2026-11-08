@@ -16,7 +16,7 @@ Based on the Official Rules at https://ugreenhackathon.devpost.com/rules (access
 ## Initial Skill package
 
 - [x] One ZIP: `dist/archivewise.zip`
-- [x] At most 10 MB (6,616 bytes)
+- [x] At most 10 MB (6,622 bytes)
 - [x] Uncompressed contents at most 10 MB (15,609 bytes)
 - [x] At most 100 files (3)
 - [x] Each file at most 1 MB (largest 10,627 bytes)

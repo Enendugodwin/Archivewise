@@ -24,7 +24,7 @@ The latest raw JSON result is saved as `docs/check-result-2026-11-08.json`. The 
 | Files | at most 100 | 3 |
 | Per file | at most 1 MB | 10,627 bytes (largest) |
 | Uncompressed total | at most 10 MB | 15,609 bytes |
-| ZIP | at most 10 MB | 6,616 bytes |
+| ZIP | at most 10 MB | 6,622 bytes |
 
 ## ZIP verification
 
