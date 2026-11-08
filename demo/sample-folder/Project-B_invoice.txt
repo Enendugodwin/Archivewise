@@ -1,0 +1,8 @@
+Type: invoice
+Date: 2026-02-02
+Project: Project-B
+Status: unpaid
+Vendor: Sample Supply Co.
+
+This is a sample invoice used by the ArchiveWise local simulator.
+It contains no real vendor or personal data.

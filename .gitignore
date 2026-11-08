@@ -9,3 +9,6 @@ desktop.ini
 # Python bytecode
 __pycache__/
 *.py[cod]
+
+# Local demo state
+demo/sample-folder/archivewise-tags.json

@@ -1,0 +1,8 @@
+Type: contract
+Date: 2026-01-15
+Project: Project-A
+Status: signed
+Client: Northwind Studio
+
+This is a sample contract used by the ArchiveWise local simulator.
+It contains no real client or personal data.

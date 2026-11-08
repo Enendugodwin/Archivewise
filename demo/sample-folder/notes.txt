@@ -1,0 +1,5 @@
+Type: note
+Date: 2026-03-01
+Status: draft
+
+Scratch notes with no project field. ArchiveWise should propose no tag here.

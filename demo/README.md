@@ -1,0 +1,64 @@
+# Try ArchiveWise locally
+
+The submitted Skill (`archivewise/`) is a Uliya orchestration package. Its real runtime is the UGREEN NAS expert environment, which provides `file-agent`, `document-agent`, and the `delegate` interface.
+
+This folder is a **local simulator** of the review and approval experience. It calls no NAS capability, and it is not part of the submitted ZIP. It exists so you can try the flow on this PC before NAS access is available.
+
+## Quick start
+
+```powershell
+python demo\archivewise_demo.py
+```
+
+The default folder is `demo/sample-folder`. The simulator shows the review and asks which proposed tags to approve.
+
+Other modes:
+
+```powershell
+# Review only, no changes
+python demo\archivewise_demo.py --no-input
+
+# Approve every proposed tag without prompting
+python demo\archivewise_demo.py --approve-all
+
+# Review your own folder
+python demo\archivewise_demo.py "C:\Users\user\Documents\some-folder"
+```
+
+## What it does
+
+1. Resolves the folder and lists files (depth 3, up to 200 files).
+2. Groups byte-identical files by SHA-256.
+3. Reads text documents and extracts `Type`, `Date`, `Project`, and `Status`.
+4. Presents duplicate groups, document findings, proposed tags, and unresolved items.
+5. Asks for approval of exact file and tag pairs.
+6. Records approved tags in `archivewise-tags.json` inside the reviewed folder.
+
+It never deletes, moves, renames, or rewrites a reviewed file. Re-run it and the sidecar is skipped from the file list.
+
+Delete `archivewise-tags.json` to reset the demo.
+
+## What the sample folder shows
+
+| File | Purpose |
+|---|---|
+| `Project-A_contract.txt` + `Project-A_contract_copy.txt` | One duplicate group; both propose the `Project-A` tag |
+| `Project-B_invoice.txt` + `Project-B_invoice_duplicate.txt` | One duplicate group; both propose the `Project-B` tag |
+| `notes.txt` | Missing project field, so no tag is proposed |
+| `broken.txt` | Invalid UTF-8, reported as unresolved |
+| `scan.bin` | Not a text document, reported as not reviewed |
+
+## Honest limits
+
+- This is a **simulation**, not the Uliya Skill runtime.
+- Duplicate detection uses local SHA-256, not UGREEN `scan-dedupe`.
+- Only text-like files are read (`.txt`, `.md`, `.markdown`, `.csv`, `.log`). PDF and Office extraction are not implemented here.
+- Tags are written to a JSON sidecar, not applied as NAS tags.
+- There are no platform approval gates or registered NAS experts in this demo.
+- The submitted package remains `dist/archivewise.zip`, built only from `archivewise/SKILL.md` and its linked references.
+
+## Try the real Skill
+
+Upload `dist/archivewise.zip` to UGREEN SkillHub or submit it through the hackathon, then run the trigger on a NAS:
+
+> Review my `Downloads/2026-Projects` folder for duplicates and documents I should keep or tag.
