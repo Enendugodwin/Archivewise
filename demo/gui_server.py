@@ -195,10 +195,10 @@ def list_directories(raw: str | None) -> dict:
         with os.scandir(path) as entries:
             for entry in entries:
                 try:
-                    if entry.is_dir():
-                        directories.append(
-                            {"name": entry.name, "path": str(Path(entry.path).resolve())}
-                        )
+                    if entry.is_dir(follow_symlinks=False):
+                        directories.append({"name": entry.name, "path": entry.path})
+                        if len(directories) >= 500:
+                            break
                 except OSError:
                     continue
     except OSError as error:
@@ -206,10 +206,23 @@ def list_directories(raw: str | None) -> dict:
     directories.sort(key=lambda item: item["name"].casefold())
     drives = []
     if os.name == "nt":
-        for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
-            root = Path(f"{letter}:\\")
-            if root.exists():
-                drives.append(str(root))
+        try:
+            import ctypes
+
+            kernel32 = ctypes.windll.kernel32
+            mask = kernel32.GetLogicalDrives()
+            for index, letter in enumerate("ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
+                if not (mask & (1 << index)):
+                    continue
+                root = f"{letter}:\\"
+                try:
+                    drive_type = kernel32.GetDriveTypeW(ctypes.c_wchar_p(root))
+                except Exception:
+                    drive_type = 3
+                if drive_type in (2, 3, 6):
+                    drives.append(root)
+        except Exception:
+            drives = [f"{letter}:\\" for letter in ("C", "D") if Path(f"{letter}:\\").is_dir()]
     parent = str(path.parent) if path.parent != path else None
     return {
         "path": str(path),

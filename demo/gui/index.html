@@ -1374,7 +1374,20 @@
   function openBrowser(startPath) {
     $('#about-modal').hidden = true;
     $('#browse-modal').hidden = false;
-    loadBrowse(startPath || (state.data ? state.data.folder : ''));
+    $('#browse-list').innerHTML = '<div class="browse-empty">Loading...</div>';
+    $('#browse-path').value = '';
+    $('#browse-drives').innerHTML = '';
+    const initial = startPath || (state.data ? state.data.folder : '');
+    fetch('/api/browse?path=' + encodeURIComponent(initial))
+      .then((response) => response.json().then((data) => ({ response, data })))
+      .then(({ response, data }) => {
+        if (response.ok && data.parent) {
+          loadBrowse(data.parent);
+        } else {
+          loadBrowse(initial);
+        }
+      })
+      .catch(() => loadBrowse(initial));
   }
 
   function closeBrowser() { $('#browse-modal').hidden = true; }
