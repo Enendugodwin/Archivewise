@@ -3,218 +3,399 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ArchiveWise — Local Preview</title>
+<title>ArchiveWise — UGOS-style Preview</title>
 <style>
   :root {
-    --bg: #f3f6f3;
-    --surface: #ffffff;
-    --surface-2: #f7faf8;
-    --ink: #16241e;
-    --muted: #5f7168;
-    --line: #dfe7e2;
-    --accent: #176b52;
-    --accent-2: #0f513d;
-    --accent-soft: #e4f1ea;
-    --amber: #8a5300;
-    --amber-soft: #fdf3e2;
-    --danger: #a33a3a;
-    --danger-soft: #fbeaea;
-    --shadow: 0 1px 2px rgba(16, 40, 32, .05), 0 12px 32px rgba(16, 40, 32, .05);
-    --radius: 16px;
+    --blue: #2f6fed;
+    --blue-600: #2563eb;
+    --blue-700: #1d4ed8;
+    --blue-soft: #eef4ff;
+    --blue-border: #c7d8ff;
+    --ink: #1f2329;
+    --muted: #6b7280;
+    --faint: #8a94a6;
+    --line: #e6e9ef;
+    --line-soft: #eef1f5;
+    --page: #f5f6f8;
+    --white: #ffffff;
+    --amber: #b45309;
+    --amber-soft: #fff7e6;
+    --green: #0f7b4f;
+    --green-soft: #e9f7ef;
+    --red: #b42318;
+    --red-soft: #fef0ef;
+    --radius: 8px;
+    --shadow-window: 0 30px 90px rgba(0, 0, 0, .48), 0 0 0 1px rgba(255, 255, 255, .07);
   }
   * { box-sizing: border-box; }
-  html { -webkit-text-size-adjust: 100%; }
+  html, body { height: 100%; }
   body {
     margin: 0;
-    background:
-      radial-gradient(900px 420px at 12% -8%, #e6f2ec 0%, rgba(230, 242, 236, 0) 62%),
-      var(--bg);
+    overflow: hidden;
     color: var(--ink);
-    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
-    font-size: 15px;
-    line-height: 1.5;
+    font-family: "Segoe UI", Arial, "Helvetica Neue", sans-serif;
+    font-size: 13.5px;
+    line-height: 1.45;
+    background:
+      radial-gradient(1100px 700px at 72% -10%, rgba(54, 118, 150, .55), transparent 65%),
+      radial-gradient(900px 620px at 6% 18%, rgba(30, 78, 108, .6), transparent 62%),
+      linear-gradient(158deg, #081521 0%, #0e2838 42%, #0b1d2a 100%);
+  }
+  body::before {
+    content: "";
+    position: fixed; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(70% 55% at 50% 115%, rgba(18, 66, 88, .9), transparent 70%),
+      repeating-radial-gradient(120% 90% at 50% 118%, rgba(132, 198, 216, .085) 0 2px, transparent 2px 26px);
+    opacity: .9;
+  }
+  body::after {
+    content: "";
+    position: fixed; inset: 0; pointer-events: none;
+    background: radial-gradient(100% 100% at 50% 40%, transparent 45%, rgba(0, 8, 14, .5) 100%);
   }
   .mono { font-family: "Cascadia Code", Consolas, "SFMono-Regular", monospace; }
-  .shell { max-width: 1180px; margin: 0 auto; padding: 26px 24px 130px; }
+  [hidden] { display: none !important; }
+  button { font: inherit; cursor: pointer; }
+  button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid #7aa7ff; outline-offset: 2px; }
 
-  header.top {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 18px; margin-bottom: 22px;
-  }
-  .brand { display: flex; align-items: center; gap: 13px; min-width: 0; }
-  .mark {
-    width: 46px; height: 46px; flex: 0 0 46px; border-radius: 13px;
+  /* ---------- desktop chrome ---------- */
+  .launcher {
+    position: fixed; z-index: 60; top: 14px; left: 16px;
+    width: 36px; height: 36px; border: 0; border-radius: 9px;
     display: grid; place-items: center; color: #fff;
-    background: linear-gradient(150deg, #1c7d61, #0e4b39);
-    box-shadow: 0 6px 16px rgba(15, 81, 61, .22);
+    background: rgba(255, 255, 255, .12);
+    backdrop-filter: blur(12px);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12);
   }
-  .brand h1 { margin: 0; font-size: 21px; letter-spacing: -.02em; line-height: 1.15; }
-  .brand p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
-  .badge {
+  .launcher:hover { background: rgba(255, 255, 255, .2); }
+  .statusbar {
+    position: fixed; z-index: 60; top: 12px; right: 18px;
+    display: flex; align-items: center; gap: 14px;
+    color: rgba(255, 255, 255, .9); font-size: 12px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .35);
+  }
+  .statusbar .item { display: inline-flex; align-items: center; gap: 6px; }
+  .statusbar .dot { width: 6px; height: 6px; border-radius: 50%; background: #5ee2a0; box-shadow: 0 0 6px #5ee2a0; }
+  .avatar {
+    width: 28px; height: 28px; border-radius: 50%; border: 0;
+    display: grid; place-items: center; font-size: 10.5px; font-weight: 700;
+    color: #0b2534; background: linear-gradient(145deg, #dff3ff, #8fc6e6);
+  }
+
+  .dock {
+    position: fixed; z-index: 55; left: 16px; top: 72px;
+    width: 70px; display: flex; flex-direction: column; align-items: center; gap: 15px;
+    transition: opacity .18s ease, transform .18s ease;
+  }
+  body.dock-hidden .dock { opacity: 0; pointer-events: none; transform: translateX(-10px); }
+  .dock-item {
+    width: 64px; border: 0; background: none; padding: 0; color: #fff;
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    text-decoration: none;
+  }
+  .dock-icon {
+    width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, .3), inset 0 0 0 1px rgba(255, 255, 255, .16);
+    transition: transform .14s ease, box-shadow .14s ease;
+  }
+  .dock-item:hover .dock-icon { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0, 0, 0, .35); }
+  .dock-item.active .dock-icon { box-shadow: 0 0 0 2px rgba(255, 255, 255, .65), 0 8px 18px rgba(0, 0, 0, .35); }
+  .dock-label {
+    font-size: 10.5px; line-height: 1.15; color: rgba(255, 255, 255, .92);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, .5); max-width: 68px; text-align: center;
+  }
+  .dock-item.active .dock-label { font-weight: 700; }
+  .ic-app { background: linear-gradient(145deg, #4f8ef7, #1d4ed8); }
+  .ic-files { background: linear-gradient(145deg, #6aa9ff, #2563eb); }
+  .ic-search { background: linear-gradient(145deg, #a78bfa, #6d28d9); }
+  .ic-help { background: linear-gradient(145deg, #fbbf24, #d97706); }
+  .ic-github { background: linear-gradient(145deg, #475569, #111827); }
+
+  /* ---------- window ---------- */
+  .desktop {
+    position: relative; z-index: 10;
+    height: 100vh; padding: 60px 24px 22px 104px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .window {
+    width: min(1180px, calc(100vw - 150px));
+    height: min(calc(100vh - 92px), 960px);
+    min-width: 0; max-width: 100%;
+    background: var(--white);
+    border-radius: 10px;
+    box-shadow: var(--shadow-window);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    transition: opacity .16s ease, transform .16s ease;
+  }
+  .window.is-min, .window.is-closed { opacity: 0; transform: scale(.985); pointer-events: none; }
+  .window.is-max {
+    position: fixed; z-index: 50; inset: 48px 10px 10px 10px;
+    width: auto; height: auto; max-width: none; max-height: none;
+  }
+  .titlebar {
+    height: 40px; flex: 0 0 40px;
+    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+    padding: 0 8px 0 12px; background: var(--white);
+    border-bottom: 1px solid var(--line);
+  }
+  .titlebar-left { display: flex; align-items: center; gap: 8px; color: var(--faint); font-size: 11.5px; }
+  .titlebar-title {
     display: inline-flex; align-items: center; gap: 7px;
-    padding: 7px 12px; border-radius: 999px;
-    background: var(--amber-soft); color: var(--amber);
-    border: 1px solid #f0ddbc; font-size: 12.5px; font-weight: 600;
-    white-space: nowrap;
+    font-size: 12.5px; font-weight: 600; color: #2b3038;
   }
-  .badge .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .titlebar-title svg { color: var(--blue); }
+  .win-controls { justify-self: end; display: flex; align-items: center; gap: 2px; }
+  .win-btn {
+    width: 30px; height: 26px; border: 0; border-radius: 5px;
+    display: grid; place-items: center; background: transparent; color: #6b7280;
+  }
+  .win-btn:hover { background: #f1f3f6; color: #111827; }
+  .win-btn.close:hover { background: #e81123; color: #fff; }
+  .win-divider { width: 1px; height: 14px; background: var(--line); margin: 0 5px; }
 
-  .card {
-    background: var(--surface); border: 1px solid var(--line);
-    border-radius: var(--radius); box-shadow: var(--shadow);
+  .window-body { flex: 1; min-height: 0; display: flex; }
+  .sidebar {
+    width: 198px; flex: 0 0 198px; background: var(--white);
+    border-right: 1px solid var(--line);
+    padding: 16px 9px 12px; display: flex; flex-direction: column; overflow-y: auto; min-height: 0;
   }
-  .folder-card { padding: 18px 20px 20px; margin-bottom: 16px; }
-  .folder-card label { display: block; font-weight: 650; font-size: 13px; margin-bottom: 7px; }
-  .folder-row { display: flex; gap: 9px; align-items: stretch; }
+  .side-label {
+    margin: 0 0 8px; padding: 0 10px; color: var(--faint);
+    font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  }
+  .side-item {
+    width: 100%; border: 0; background: transparent; color: #4b5563;
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: 7px; font-size: 13px; text-align: left;
+    margin-bottom: 2px;
+  }
+  .side-item svg { flex: 0 0 auto; color: #7b8494; }
+  .side-item:hover { background: #f5f7fa; }
+  .side-item.active {
+    background: var(--blue-soft); color: var(--blue-600);
+    box-shadow: inset 3px 0 0 var(--blue);
+    font-weight: 600;
+  }
+  .side-item.active svg { color: var(--blue); }
+  .side-count {
+    margin-left: auto; min-width: 20px; height: 18px; padding: 0 6px;
+    display: inline-grid; place-items: center; border-radius: 999px;
+    background: #f0f2f5; color: #6b7280; font-size: 10.5px; font-weight: 600;
+  }
+  .side-item.active .side-count { background: #dbe8ff; color: var(--blue-600); }
+  .side-session {
+    margin-top: auto; padding: 11px; border: 1px solid var(--line);
+    border-radius: 8px; background: #fafbfc;
+  }
+  .side-session .k { font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--faint); }
+  .side-session .v { margin-top: 4px; font-size: 11.5px; color: #4b5563; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .side-session .hint { margin-top: 6px; font-size: 10.5px; color: var(--faint); }
+
+  .content {
+    flex: 1; min-width: 0; min-height: 0; background: var(--page);
+    padding: 20px 24px 0; overflow-y: auto; overflow-x: hidden;
+    display: flex; flex-direction: column;
+  }
+  .content > * { flex: 0 0 auto; }
+  .page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+  .page-head h1 { margin: 0; font-size: 19px; font-weight: 600; letter-spacing: -.01em; }
+  .page-head p { margin: 2px 0 0; color: var(--muted); font-size: 12px; }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px;
+    border-radius: 999px; background: #f0f2f5; color: #4b5563;
+    font-size: 11.5px; font-weight: 600; white-space: nowrap;
+  }
+  .status-pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #9aa3b2; }
+  .status-pill.busy { background: var(--amber-soft); color: var(--amber); }
+  .status-pill.busy::before { background: #f59e0b; }
+  .status-pill.done { background: var(--green-soft); color: var(--green); }
+  .status-pill.done::before { background: #16a34a; }
+  .status-pill.error { background: var(--red-soft); color: var(--red); }
+  .status-pill.error::before { background: #ef4444; }
+
+  .card { background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); min-width: 0; }
+  .panel, .stat { min-width: 0; }
+  .folder-card { padding: 13px 14px 14px; margin-bottom: 14px; }
+  .folder-card label { display: block; font-size: 11.5px; font-weight: 600; margin-bottom: 6px; color: #374151; }
+  .folder-row { display: flex; gap: 7px; }
   .folder-row input {
-    flex: 1 1 auto; min-width: 0; height: 44px; padding: 0 13px;
-    border: 1px solid #cfdad4; border-radius: 10px; background: #fff;
-    color: var(--ink); font: 13.5px/1.4 "Cascadia Code", Consolas, monospace;
+    flex: 1 1 auto; min-width: 0; height: 34px; padding: 0 10px;
+    border: 1px solid #d6dbe3; border-radius: 6px; background: #fff;
+    font: 12px/1.4 "Cascadia Code", Consolas, monospace; color: var(--ink);
   }
-  .folder-row input:focus-visible { outline: 3px solid #b9dfcf; outline-offset: 1px; border-color: var(--accent); }
-  button { font: inherit; cursor: pointer; border-radius: 10px; border: 1px solid transparent; }
-  button:focus-visible { outline: 3px solid #b9dfcf; outline-offset: 2px; }
+  .folder-row input:focus { border-color: var(--blue); outline: none; box-shadow: 0 0 0 3px rgba(47, 111, 237, .13); }
   .btn {
-    height: 44px; padding: 0 16px; font-weight: 650; font-size: 13.5px;
-    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
-    white-space: nowrap; transition: background .15s ease, border-color .15s ease, transform .05s ease;
+    height: 34px; padding: 0 13px; border-radius: 6px; border: 1px solid transparent;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    font-size: 12.5px; font-weight: 600; white-space: nowrap;
+    transition: background .13s ease, border-color .13s ease;
   }
-  .btn:active { transform: translateY(1px); }
-  .btn.primary { background: var(--accent); color: #fff; box-shadow: 0 4px 12px rgba(23, 107, 82, .18); }
-  .btn.primary:hover { background: var(--accent-2); }
-  .btn.primary:disabled { background: #a8bcb4; box-shadow: none; cursor: not-allowed; }
-  .btn.ghost { background: #fff; border-color: #cfdad4; color: var(--ink); }
-  .btn.ghost:hover { background: var(--surface-2); border-color: #b9c9c1; }
-  .hint { margin: 9px 0 0; color: var(--muted); font-size: 12.5px; }
-  .hint code { font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; }
+  .btn.primary { background: var(--blue); color: #fff; }
+  .btn.primary:hover { background: var(--blue-600); }
+  .btn.primary:disabled { background: #b9c8e6; cursor: not-allowed; }
+  .btn.ghost { background: #fff; border-color: #d6dbe3; color: #374151; }
+  .btn.ghost:hover { background: #f7f9fc; border-color: #c3cad6; }
+  .hint { margin: 7px 0 0; color: var(--muted); font-size: 11.5px; }
+  .hint code { font-family: "Cascadia Code", Consolas, monospace; font-size: 11px; }
 
-  #loading { height: 3px; margin: 0 0 14px; border-radius: 3px; overflow: hidden; background: #e3ebe7; display: none; }
+  #loading { height: 2px; margin: -6px 0 12px; overflow: hidden; border-radius: 2px; background: #e5eaf2; display: none; }
   #loading.on { display: block; }
   #loading::after {
-    content: ""; display: block; width: 38%; height: 100%; background: var(--accent); border-radius: 3px;
-    animation: slide 1s ease-in-out infinite;
+    content: ""; display: block; width: 36%; height: 100%; background: var(--blue);
+    border-radius: 2px; animation: slide 1s ease-in-out infinite;
   }
-  @keyframes slide { 0% { transform: translateX(-110%); } 100% { transform: translateX(360%); } }
+  @keyframes slide { 0% { transform: translateX(-110%); } 100% { transform: translateX(380%); } }
 
-  .stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
-  .stat { padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 13px; }
-  .stat .k { color: var(--muted); font-size: 11.5px; font-weight: 650; text-transform: uppercase; letter-spacing: .06em; }
-  .stat .v { font-size: 25px; font-weight: 750; letter-spacing: -.03em; line-height: 1.15; margin-top: 3px; }
-  .stat.hot .v { color: var(--accent); }
+  .stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+  .stat { padding: 11px 13px; background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); }
+  .stat .k { color: var(--faint); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; }
+  .stat .v { margin-top: 2px; font-size: 22px; font-weight: 600; letter-spacing: -.02em; line-height: 1.2; }
+  .stat.hot .v { color: var(--blue-600); }
   .stat.warn .v { color: var(--amber); }
 
-  .grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(330px, .9fr); gap: 18px; align-items: start; }
-  .col { display: grid; gap: 18px; min-width: 0; }
-  .panel { padding: 20px; }
-  .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
-  .panel-head h2 { margin: 0; font-size: 15.5px; letter-spacing: -.01em; display: flex; align-items: center; gap: 8px; }
-  .panel-head h2 svg { color: var(--accent); }
+  .grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(330px, .9fr); gap: 14px; align-items: start; min-width: 0; }
+  .col { display: grid; gap: 14px; min-width: 0; }
+  .panel { padding: 15px 16px; }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 11px; }
+  .panel-head h2 { margin: 0; font-size: 13.5px; font-weight: 600; display: flex; align-items: center; gap: 7px; }
+  .panel-head h2 svg { color: var(--blue); }
   .count-pill {
-    display: inline-flex; min-width: 24px; height: 22px; padding: 0 7px; align-items: center; justify-content: center;
-    border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); color: var(--muted);
-    font-size: 12px; font-weight: 650;
+    display: inline-flex; min-width: 21px; height: 19px; padding: 0 6px;
+    align-items: center; justify-content: center; border-radius: 999px;
+    background: #f0f2f5; color: #6b7280; font-size: 10.5px; font-weight: 600;
   }
-  .selectall { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12.5px; font-weight: 600; cursor: pointer; }
-  .selectall input { accent-color: var(--accent); width: 15px; height: 15px; }
+  .selectall { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 11.5px; font-weight: 600; cursor: pointer; }
+  .selectall input { accent-color: var(--blue); width: 14px; height: 14px; }
 
   .dup {
-    background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px;
-    padding: 13px 14px; margin-bottom: 10px;
+    background: #fafbfc; border: 1px solid var(--line); border-radius: 7px;
+    padding: 11px 12px; margin-bottom: 8px;
   }
   .dup:last-child { margin-bottom: 0; }
   .dup-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
-  .dup-title { font-weight: 700; font-size: 13.5px; }
-  .dup-size { color: var(--muted); font-size: 12.5px; }
-  .dup-hash { margin: 3px 0 8px; color: #7d8f86; font-size: 11.5px; overflow-wrap: anywhere; }
-  .file-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
-  .file-list li { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 13px; }
-  .file-list svg { flex: 0 0 auto; color: #8fa39a; }
+  .dup-title { font-size: 12.5px; font-weight: 600; }
+  .dup-size { color: var(--muted); font-size: 11.5px; white-space: nowrap; }
+  .dup-hash { margin: 2px 0 7px; color: #9aa3b2; font-size: 10.5px; overflow-wrap: anywhere; }
+  .file-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+  .file-list li { display: flex; align-items: center; gap: 7px; min-width: 0; font-size: 12px; }
+  .file-list svg { flex: 0 0 auto; color: #9aa3b2; }
   .file-list span { overflow-wrap: anywhere; }
 
-  .table-wrap { overflow-x: auto; margin: 0 -4px; padding: 0 4px; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 650px; }
+  .table-wrap { overflow-x: auto; margin: 0 -2px; padding: 0 2px; min-width: 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 540px; }
   th {
-    text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
-    color: var(--muted); font-weight: 700; padding: 0 10px 8px 0; border-bottom: 1px solid var(--line);
+    text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .07em;
+    color: var(--faint); font-weight: 700; padding: 0 6px 7px 0; border-bottom: 1px solid var(--line);
   }
-  td { padding: 10px 10px 10px 0; border-bottom: 1px solid #edf2ef; vertical-align: top; }
+  td { padding: 8px 6px 8px 0; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
   tr:last-child td { border-bottom: 0; }
-  td.file { font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; overflow-wrap: anywhere; min-width: 150px; }
-  td.evidence { color: var(--muted); font-size: 12px; font-style: italic; max-width: 220px; }
-  .missing { color: #9aa9a2; }
-  .chip {
-    display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 650;
-    background: var(--surface-2); border: 1px solid var(--line); color: #41554b; white-space: nowrap;
-  }
-  .chip.ok { background: var(--accent-soft); border-color: #c6e2d6; color: var(--accent-2); }
+  tbody tr:hover td { background: #f8faff; }
+  td.file { font-family: "Cascadia Code", Consolas, monospace; font-size: 11px; overflow-wrap: anywhere; min-width: 150px; }
+  td.evidence { color: var(--muted); font-size: 11px; font-style: italic; max-width: 210px; }
+  .missing { color: #a5adba; }
 
-  .tag-list { display: grid; gap: 8px; }
+  .tag-list { display: grid; gap: 7px; }
   .tag-row {
-    display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 11px;
-    padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: #fff;
+    display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 9px;
+    padding: 10px; border: 1px solid var(--line); border-radius: 7px; background: #fff;
     cursor: pointer; transition: background .12s ease, border-color .12s ease;
   }
-  .tag-row:hover { background: var(--surface-2); }
-  .tag-row:has(input:checked) { background: #f1f8f4; border-color: #b7dccb; }
-  .tag-row input { width: 16px; height: 16px; margin: 3px 0 0; accent-color: var(--accent); }
+  .tag-row:hover { background: #fafbfc; }
+  .tag-row:has(input:checked) { background: #f5f9ff; border-color: var(--blue-border); }
+  .tag-row input { width: 15px; height: 15px; margin: 2px 0 0; accent-color: var(--blue); }
   .tag-main { min-width: 0; }
-  .tag-file { display: block; font-family: "Cascadia Code", Consolas, monospace; font-size: 11.8px; overflow-wrap: anywhere; }
-  .tag-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+  .tag-file { display: block; font-family: "Cascadia Code", Consolas, monospace; font-size: 11px; overflow-wrap: anywhere; }
+  .tag-meta { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin-top: 5px; }
   .tag-pill {
-    display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px;
-    background: var(--accent-soft); color: var(--accent-2); font-size: 11.8px; font-weight: 700;
+    display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px;
+    background: var(--blue-soft); color: var(--blue-600); font-size: 10.5px; font-weight: 600;
   }
-  .tag-reason { color: var(--muted); font-size: 11.8px; }
-  .tag-row.applied { background: #f1f8f4; border-color: #b7dccb; box-shadow: inset 3px 0 0 var(--accent); }
-  .untagged { margin-top: 13px; padding-top: 12px; border-top: 1px dashed var(--line); }
-  .untagged .k { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
-  .untagged ul { margin: 6px 0 0; padding-left: 18px; color: var(--muted); font-size: 12.2px; }
+  .tag-reason { color: var(--muted); font-size: 10.5px; }
+  .tag-row.applied { background: #f3fbf6; border-color: #bfe6cf; box-shadow: inset 3px 0 0 #16a34a; }
+  .untagged { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
+  .untagged .k { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--faint); }
+  .untagged ul { margin: 5px 0 0; padding-left: 17px; color: var(--muted); font-size: 11px; }
   .untagged li { margin: 2px 0; overflow-wrap: anywhere; }
 
-  .unresolved-list { display: grid; gap: 7px; }
-  .unresolved-item { display: flex; gap: 9px; align-items: flex-start; padding: 9px 11px; border-radius: 10px; background: var(--amber-soft); border: 1px solid #f0ddbc; }
-  .unresolved-item svg { flex: 0 0 auto; color: var(--amber); margin-top: 2px; }
-  .unresolved-item .f { font-family: "Cascadia Code", Consolas, monospace; font-size: 11.6px; overflow-wrap: anywhere; }
-  .unresolved-item .r { color: #7b5a2a; font-size: 11.6px; }
+  .unresolved-list { display: grid; gap: 6px; }
+  .unresolved-item {
+    display: flex; gap: 8px; align-items: flex-start; padding: 8px 10px;
+    border-radius: 7px; background: var(--amber-soft); border: 1px solid #f2dfb9;
+  }
+  .unresolved-item svg { flex: 0 0 auto; color: var(--amber); margin-top: 1px; }
+  .unresolved-item .f { font-family: "Cascadia Code", Consolas, monospace; font-size: 10.7px; overflow-wrap: anywhere; }
+  .unresolved-item .r { color: #7c5a22; font-size: 10.7px; }
 
-  .empty-state { padding: 38px 22px; text-align: center; color: var(--muted); }
-  .empty-state svg { color: #a9b9b1; margin-bottom: 8px; }
-  .empty-state h3 { margin: 0 0 4px; color: var(--ink); font-size: 15.5px; }
-  .banner { padding: 12px 14px; border-radius: 12px; margin-bottom: 14px; font-size: 13px; display: none; }
+  .empty-state { padding: 36px 22px; text-align: center; color: var(--muted); }
+  .empty-state svg { color: #b3bcc9; margin-bottom: 8px; }
+  .empty-state h3 { margin: 0 0 3px; color: var(--ink); font-size: 14px; }
+  .banner { padding: 10px 12px; border-radius: 7px; margin-bottom: 12px; font-size: 12px; display: none; }
   .banner.on { display: block; }
-  .banner.error { background: var(--danger-soft); border: 1px solid #f0c9c9; color: #7d2b2b; }
-  .banner.result { background: var(--accent-soft); border: 1px solid #c6e2d6; color: var(--accent-2); }
-  .banner .mono { font-size: 11.8px; overflow-wrap: anywhere; }
+  .banner.error { background: var(--red-soft); border: 1px solid #f2cdc9; color: var(--red); }
+  .banner.result { background: var(--green-soft); border: 1px solid #c9e8d6; color: var(--green); }
+  .banner .mono { font-size: 10.8px; overflow-wrap: anywhere; }
 
   .actionbar {
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
-    background: rgba(255, 255, 255, .93); border-top: 1px solid var(--line);
-    backdrop-filter: blur(10px); display: none;
+    display: none; position: sticky; bottom: 0; z-index: 5;
+    margin: 14px -24px 0; padding: 11px 24px;
+    background: rgba(255, 255, 255, .96); border-top: 1px solid var(--line);
+    backdrop-filter: blur(8px); align-items: center; justify-content: space-between; gap: 14px;
   }
-  .actionbar.on { display: block; }
-  .actionbar-inner {
-    max-width: 1180px; margin: 0 auto; padding: 13px 24px;
-    display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  }
-  .actionbar .summary { font-size: 13.5px; color: var(--muted); }
-  .actionbar .summary strong { color: var(--ink); font-size: 15px; }
-  .actionbar .actions { display: flex; gap: 9px; }
-  footer { margin-top: 24px; color: #85958d; font-size: 11.8px; text-align: center; }
+  .actionbar.on { display: flex; }
+  .actionbar .summary { font-size: 12px; color: var(--muted); }
+  .actionbar .summary strong { color: var(--ink); font-size: 13.5px; }
+  .actionbar .actions { display: flex; gap: 7px; }
+  footer.page-foot { padding: 14px 0 18px; color: #9aa3b2; font-size: 10.8px; text-align: center; }
 
-  @media (max-width: 980px) {
-    .grid { grid-template-columns: 1fr; }
-    .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .panel { padding: 17px; }
+  /* ---------- overlays ---------- */
+  .restore-bar {
+    position: fixed; z-index: 70; left: 50%; bottom: 20px; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 10px; padding: 8px 10px 8px 8px;
+    background: rgba(255, 255, 255, .97); border: 1px solid var(--line);
+    border-radius: 10px; box-shadow: 0 14px 40px rgba(0, 0, 0, .35);
   }
-  @media (max-width: 680px) {
-    .shell { padding: 18px 14px 140px; }
-    header.top { align-items: flex-start; flex-direction: column; gap: 10px; }
-    .badge { align-self: flex-start; }
+  .restore-bar .mini { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; background: linear-gradient(145deg, #4f8ef7, #1d4ed8); color: #fff; }
+  .restore-bar span { font-size: 12px; color: #374151; }
+  .overlay {
+    position: fixed; z-index: 80; inset: 0; display: grid; place-items: center;
+    background: rgba(8, 18, 28, .5); backdrop-filter: blur(3px);
+  }
+  .dialog {
+    width: min(440px, calc(100vw - 32px)); background: #fff; border-radius: 10px;
+    box-shadow: 0 30px 90px rgba(0, 0, 0, .45); overflow: hidden;
+  }
+  .dialog-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  .dialog-head h2 { margin: 0; font-size: 13.5px; font-weight: 600; }
+  .dialog-body { padding: 15px 16px; color: #4b5563; font-size: 12.5px; }
+  .dialog-body p { margin: 0 0 9px; }
+  .dialog-actions { display: flex; justify-content: flex-end; gap: 7px; padding: 0 16px 15px; }
+  .closed-card { text-align: center; padding: 26px 24px; }
+  .closed-card .big { width: 48px; height: 48px; margin: 0 auto 10px; border-radius: 12px; display: grid; place-items: center; background: linear-gradient(145deg, #4f8ef7, #1d4ed8); color: #fff; }
+  .closed-card h2 { margin: 0 0 4px; font-size: 15px; }
+  .closed-card p { margin: 0 0 14px; color: var(--muted); font-size: 12px; }
+
+  @media (max-width: 1100px) {
+    .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid { grid-template-columns: 1fr; }
+    .dock-label { display: none; }
+    .dock-item { width: 50px; }
+  }
+  @media (max-width: 820px) {
+    .desktop { padding: 52px 8px 8px; }
+    .window { width: 100%; max-width: 100%; height: calc(100vh - 60px); border-radius: 8px; }
+    .sidebar { display: none; }
+    .content { padding: 14px 13px 0; }
+    .actionbar { margin-left: -13px; margin-right: -13px; padding: 10px 13px; }
+    .dock { display: none; }
+    .statusbar .net-text { display: none; }
     .folder-row { flex-wrap: wrap; }
     .folder-row input { flex-basis: 100%; }
     .folder-row .btn { flex: 1 1 auto; }
     .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .actionbar-inner { flex-direction: column; align-items: stretch; gap: 9px; padding: 11px 14px; }
+    .window.is-max { inset: 38px 4px 4px; }
+    .actionbar { flex-direction: column; align-items: stretch; gap: 8px; }
     .actionbar .actions { display: grid; grid-template-columns: 1fr 1.4fr; }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -223,124 +404,255 @@
 </style>
 </head>
 <body>
-<div class="shell">
-  <header class="top">
-    <div class="brand">
-      <div class="mark" aria-hidden="true">
-        <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3.5 7.5h17v11a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-11Z"/>
-          <path d="M2.5 4.5h19v3h-19z"/>
-          <path d="M10 12h4"/>
-        </svg>
-      </div>
-      <div>
-        <h1>ArchiveWise</h1>
-        <p>Review a folder before you change it</p>
-      </div>
-    </div>
-    <span class="badge"><span class="dot"></span>Local simulation · not the NAS runtime</span>
-  </header>
+<button class="launcher" id="launcher" type="button" title="Toggle app dock" aria-label="Toggle app dock">
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="5" r="1.5"/><circle cx="12" cy="5" r="1.5"/><circle cx="19" cy="5" r="1.5"/><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="5" cy="19" r="1.5"/><circle cx="12" cy="19" r="1.5"/><circle cx="19" cy="19" r="1.5"/></svg>
+</button>
 
-  <section class="card folder-card" aria-labelledby="folder-label">
-    <form id="folder-form">
-      <label id="folder-label" for="folder">Folder to review</label>
-      <div class="folder-row">
-        <input id="folder" name="folder" type="text" autocomplete="off" spellcheck="false" placeholder="C:\Users\you\Downloads\2026-Projects">
-        <button type="button" class="btn ghost" id="browse">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
-          Browse
-        </button>
-        <button type="submit" class="btn primary" id="analyze">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
-          Analyze
-        </button>
-      </div>
-      <p class="hint">Try the sample folder or paste any local path. Files are never changed until you approve a tag.</p>
-    </form>
-  </section>
-
-  <div id="loading" aria-hidden="true"></div>
-  <div id="error" class="banner error" role="alert"></div>
-
-  <section id="summary" class="stats" aria-label="Review summary" hidden>
-    <div class="stat"><div class="k">Files</div><div class="v" id="stat-files">0</div></div>
-    <div class="stat"><div class="k">Duplicate groups</div><div class="v" id="stat-groups">0</div></div>
-    <div class="stat"><div class="k">Documents</div><div class="v" id="stat-docs">0</div></div>
-    <div class="stat hot"><div class="k">Proposed tags</div><div class="v" id="stat-tags">0</div></div>
-    <div class="stat warn"><div class="k">Needs attention</div><div class="v" id="stat-attn">0</div></div>
-  </section>
-
-  <div id="content" class="grid" hidden>
-    <div class="col">
-      <section class="card panel" aria-labelledby="dupes-title">
-        <div class="panel-head">
-          <h2 id="dupes-title">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
-            Duplicate groups
-          </h2>
-          <span class="count-pill" id="dupes-count">0</span>
-        </div>
-        <div id="dupes"></div>
-      </section>
-
-      <section class="card panel" aria-labelledby="findings-title">
-        <div class="panel-head">
-          <h2 id="findings-title">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2.8h8l4 4v14.4H6z"/><path d="M14 2.8v4h4"/><path d="M9 12h6M9 15.5h6"/></svg>
-            Document findings
-          </h2>
-          <span class="count-pill" id="findings-count">0</span>
-        </div>
-        <div id="findings"></div>
-      </section>
-    </div>
-
-    <div class="col">
-      <section class="card panel" aria-labelledby="tags-title">
-        <div class="panel-head">
-          <h2 id="tags-title">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 13.2 12.8 21 3 11.2V3h8.2l9.3 9.3a1.3 1.3 0 0 1 0 .9Z"/><circle cx="7.5" cy="7.5" r="1.1"/></svg>
-            Proposed tags
-          </h2>
-          <label class="selectall" id="selectall-wrap" hidden>
-            <input type="checkbox" id="selectall"> All
-          </label>
-        </div>
-        <div id="result" class="banner result" role="status"></div>
-        <div id="tags"></div>
-        <div id="untagged"></div>
-      </section>
-
-      <section class="card panel" aria-labelledby="unresolved-title">
-        <div class="panel-head">
-          <h2 id="unresolved-title">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5"/><circle cx="12" cy="17.2" r=".7" fill="currentColor" stroke="none"/></svg>
-            Needs attention
-          </h2>
-          <span class="count-pill" id="attn-count">0</span>
-        </div>
-        <div id="unresolved"></div>
-      </section>
-    </div>
-  </div>
-
-  <section id="empty" class="card empty-state" hidden>
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
-    <h3>No matching items</h3>
-    <p>No files were found in that folder. Nothing was changed.</p>
-  </section>
-
-  <footer>
-    Local simulation · Reviewed files are never modified · Approved tags are recorded in <span class="mono">archivewise-tags.json</span> · The submitted Skill runs on UGREEN NAS
-  </footer>
+<div class="statusbar" aria-label="System status">
+  <span class="item"><span class="dot"></span><span class="net-text">Local</span></span>
+  <span class="item mono" id="clock">--:--</span>
+  <span style="width:1px;height:14px;background:rgba(255,255,255,.25)"></span>
+  <button class="avatar" type="button" title="Local demo user" aria-label="Local demo user">AW</button>
 </div>
 
-<div id="actionbar" class="actionbar">
-  <div class="actionbar-inner">
-    <div class="summary"><strong id="selected-count">0</strong> of <span id="total-count">0</span> tags selected</div>
-    <div class="actions">
-      <button type="button" class="btn ghost" id="clear">Clear</button>
-      <button type="button" class="btn primary" id="approve" disabled>Approve selected</button>
+<nav class="dock" id="dock" aria-label="Applications">
+  <button class="dock-item active" type="button" data-action="home" title="ArchiveWise">
+    <span class="dock-icon ic-app">
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5h17v11a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-11Z"/><path d="M2.5 4.5h19v3h-19z"/><path d="M10 12h4"/></svg>
+    </span>
+    <span class="dock-label">ArchiveWise</span>
+  </button>
+  <button class="dock-item" type="button" data-action="browse" title="Browse folders">
+    <span class="dock-icon ic-files">
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
+    </span>
+    <span class="dock-label">Files</span>
+  </button>
+  <button class="dock-item" type="button" data-action="search" title="Jump to folder input">
+    <span class="dock-icon ic-search">
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+    </span>
+    <span class="dock-label">Search</span>
+  </button>
+  <button class="dock-item" type="button" data-action="about" title="About this demo">
+    <span class="dock-icon ic-help">
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M8.4 14.5a6 6 0 1 1 7.2 0c-.9.7-1.4 1.6-1.6 2.5H10c-.2-.9-.7-1.8-1.6-2.5Z"/></svg>
+    </span>
+    <span class="dock-label">Help</span>
+  </button>
+  <a class="dock-item" href="https://github.com/Enendugodwin/Archivewise" target="_blank" rel="noreferrer" title="GitHub repository">
+    <span class="dock-icon ic-github">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.9 1.53 2.35 1.09 2.92.83.09-.65.35-1.09.64-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.6 9.6 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/></svg>
+    </span>
+    <span class="dock-label">GitHub</span>
+  </a>
+</nav>
+
+<div class="desktop">
+  <main class="window" id="window" aria-label="ArchiveWise application window">
+    <div class="titlebar">
+      <div class="titlebar-left"></div>
+      <div class="titlebar-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5h17v11a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-11Z"/><path d="M2.5 4.5h19v3h-19z"/><path d="M10 12h4"/></svg>
+        ArchiveWise
+      </div>
+      <div class="win-controls">
+        <button class="win-btn" type="button" id="win-about" title="About" aria-label="About ArchiveWise">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.6 9a2.5 2.5 0 1 1 3.9 2c-.9.6-1.5 1.1-1.5 2.2"/><circle cx="12" cy="17" r=".8" fill="currentColor" stroke="none"/></svg>
+        </button>
+        <span class="win-divider"></span>
+        <button class="win-btn" type="button" id="win-min" title="Minimize" aria-label="Minimize">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"/></svg>
+        </button>
+        <button class="win-btn" type="button" id="win-max" title="Maximize" aria-label="Maximize">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="5" width="14" height="14" rx="1"/></svg>
+        </button>
+        <button class="win-btn close" type="button" id="win-close" title="Close" aria-label="Close">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="window-body">
+      <aside class="sidebar" aria-label="Sections">
+        <div class="side-label">Review</div>
+        <button class="side-item active" type="button" data-scroll="top">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>
+          Overview
+        </button>
+        <button class="side-item" type="button" data-scroll="dupes-card">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
+          Duplicates <span class="side-count" id="side-groups">0</span>
+        </button>
+        <button class="side-item" type="button" data-scroll="findings-card">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 2.8h8l4 4v14.4H6z"/><path d="M14 2.8v4h4"/><path d="M9 12h6M9 15.5h6"/></svg>
+          Documents <span class="side-count" id="side-docs">0</span>
+        </button>
+        <button class="side-item" type="button" data-scroll="tags-card">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20.5 13.2 12.8 21 3 11.2V3h8.2l9.3 9.3a1.3 1.3 0 0 1 0 .9Z"/><circle cx="7.5" cy="7.5" r="1.1"/></svg>
+          Tags <span class="side-count" id="side-tags">0</span>
+        </button>
+        <button class="side-item" type="button" data-scroll="attn-card">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5"/><circle cx="12" cy="17.2" r=".7" fill="currentColor" stroke="none"/></svg>
+          Needs attention <span class="side-count" id="side-attn">0</span>
+        </button>
+
+        <div class="side-session">
+          <div class="k">Session</div>
+          <div class="v mono" id="side-folder">Sample folder</div>
+          <div class="hint">Local simulation. No NAS calls.</div>
+        </div>
+      </aside>
+
+      <section class="content" id="content-scroll">
+        <div class="page-head">
+          <div>
+            <h1>Review</h1>
+            <p>Check duplicates, document details, and tags before anything changes.</p>
+          </div>
+          <span class="status-pill" id="mode-pill">Ready</span>
+        </div>
+
+        <section class="card folder-card" aria-labelledby="folder-label">
+          <form id="folder-form">
+            <label id="folder-label" for="folder">Folder to review</label>
+            <div class="folder-row">
+              <input id="folder" name="folder" type="text" autocomplete="off" spellcheck="false" placeholder="C:\Users\you\Downloads\2026-Projects">
+              <button type="button" class="btn ghost" id="browse">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
+                Browse
+              </button>
+              <button type="submit" class="btn primary" id="analyze">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+                Analyze
+              </button>
+            </div>
+            <p class="hint">Try the sample folder or paste any local path. Reviewed files are never modified.</p>
+          </form>
+        </section>
+
+        <div id="loading" aria-hidden="true"></div>
+        <div id="error" class="banner error" role="alert"></div>
+
+        <section id="summary" class="stats" aria-label="Review summary" hidden>
+          <div class="stat"><div class="k">Files</div><div class="v" id="stat-files">0</div></div>
+          <div class="stat"><div class="k">Duplicate groups</div><div class="v" id="stat-groups">0</div></div>
+          <div class="stat"><div class="k">Documents</div><div class="v" id="stat-docs">0</div></div>
+          <div class="stat hot"><div class="k">Proposed tags</div><div class="v" id="stat-tags">0</div></div>
+          <div class="stat warn"><div class="k">Needs attention</div><div class="v" id="stat-attn">0</div></div>
+        </section>
+
+        <div id="content" class="grid" hidden>
+          <div class="col">
+            <section class="card panel" id="dupes-card" aria-labelledby="dupes-title">
+              <div class="panel-head">
+                <h2 id="dupes-title">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
+                  Duplicate groups
+                </h2>
+                <span class="count-pill" id="dupes-count">0</span>
+              </div>
+              <div id="dupes"></div>
+            </section>
+
+            <section class="card panel" id="findings-card" aria-labelledby="findings-title">
+              <div class="panel-head">
+                <h2 id="findings-title">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2.8h8l4 4v14.4H6z"/><path d="M14 2.8v4h4"/><path d="M9 12h6M9 15.5h6"/></svg>
+                  Document findings
+                </h2>
+                <span class="count-pill" id="findings-count">0</span>
+              </div>
+              <div id="findings"></div>
+            </section>
+          </div>
+
+          <div class="col">
+            <section class="card panel" id="tags-card" aria-labelledby="tags-title">
+              <div class="panel-head">
+                <h2 id="tags-title">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 13.2 12.8 21 3 11.2V3h8.2l9.3 9.3a1.3 1.3 0 0 1 0 .9Z"/><circle cx="7.5" cy="7.5" r="1.1"/></svg>
+                  Proposed tags
+                </h2>
+                <label class="selectall" id="selectall-wrap" hidden>
+                  <input type="checkbox" id="selectall"> All
+                </label>
+              </div>
+              <div id="result" class="banner result" role="status"></div>
+              <div id="tags"></div>
+              <div id="untagged"></div>
+            </section>
+
+            <section class="card panel" id="attn-card" aria-labelledby="unresolved-title">
+              <div class="panel-head">
+                <h2 id="unresolved-title">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5"/><circle cx="12" cy="17.2" r=".7" fill="currentColor" stroke="none"/></svg>
+                  Needs attention
+                </h2>
+                <span class="count-pill" id="attn-count">0</span>
+              </div>
+              <div id="unresolved"></div>
+            </section>
+          </div>
+        </div>
+
+        <section id="empty" class="card empty-state" hidden>
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
+          <h3>No matching items</h3>
+          <p>No files were found in that folder. Nothing was changed.</p>
+        </section>
+
+        <div id="actionbar" class="actionbar">
+          <div class="summary"><strong id="selected-count">0</strong> of <span id="total-count">0</span> tags selected</div>
+          <div class="actions">
+            <button type="button" class="btn ghost" id="clear">Clear</button>
+            <button type="button" class="btn primary" id="approve" disabled>Approve selected</button>
+          </div>
+        </div>
+
+        <footer class="page-foot">
+          Local simulation · reviewed files are never modified · approved tags are recorded in <span class="mono">archivewise-tags.json</span>
+        </footer>
+      </section>
+    </div>
+  </main>
+</div>
+
+<div class="restore-bar" id="restore-bar" hidden>
+  <span class="mini">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3.5 7.5h17v11a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-11Z"/><path d="M2.5 4.5h19v3h-19z"/></svg>
+  </span>
+  <span>ArchiveWise is minimized</span>
+  <button type="button" class="btn primary" id="restore">Restore</button>
+</div>
+
+<div class="overlay" id="closed-screen" hidden>
+  <div class="dialog closed-card">
+    <div class="big">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3.5 7.5h17v11a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-11Z"/><path d="M2.5 4.5h19v3h-19z"/></svg>
+    </div>
+    <h2>ArchiveWise is closed</h2>
+    <p>The local preview window was closed. No files were changed.</p>
+    <button type="button" class="btn primary" id="reopen">Reopen ArchiveWise</button>
+  </div>
+</div>
+
+<div class="overlay" id="about-modal" hidden>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="about-title">
+    <div class="dialog-head">
+      <h2 id="about-title">About ArchiveWise</h2>
+      <button class="win-btn" type="button" id="about-close" aria-label="Close">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <p>This is a <strong>local simulation</strong> of the ArchiveWise review flow, styled after the UGREEN UGOS desktop. It is not the Uliya Skill runtime.</p>
+      <p>It reads a local folder, finds byte-identical duplicates, extracts text-document fields, and records approved tags in <span class="mono">archivewise-tags.json</span>. Reviewed files are never modified.</p>
+      <p>The submitted Skill runs on UGREEN NAS through registered file and document experts.</p>
+    </div>
+    <div class="dialog-actions">
+      <a class="btn ghost" href="https://github.com/Enendugodwin/Archivewise" target="_blank" rel="noreferrer">GitHub</a>
+      <button type="button" class="btn primary" id="about-ok">Close</button>
     </div>
   </div>
 </div>
@@ -350,8 +662,8 @@
   const state = { data: null, selected: new Set(), applied: false, busy: false };
 
   const icons = {
-    file: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 2.8h8l4 4v14.4H6z"/><path d="M14 2.8v4h4"/></svg>',
-    alert: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5"/><circle cx="12" cy="17.2" r=".7" fill="currentColor" stroke="none"/></svg>'
+    file: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 2.8h8l4 4v14.4H6z"/><path d="M14 2.8v4h4"/></svg>',
+    alert: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5"/><circle cx="12" cy="17.2" r=".7" fill="currentColor" stroke="none"/></svg>'
   };
 
   function esc(value) {
@@ -366,14 +678,23 @@
     return (bytes / (1024 * 1024)).toFixed(1) + ' MiB';
   }
 
+  function setMode(text, cls) {
+    const pill = $('#mode-pill');
+    pill.textContent = text;
+    pill.className = 'status-pill' + (cls ? ' ' + cls : '');
+  }
+
   function setBusy(busy) {
     state.busy = busy;
     $('#loading').classList.toggle('on', busy);
-    $('#analyze').disabled = busy;
     $('#browse').disabled = busy;
-    $('#analyze').textContent = busy ? 'Analyzing…' : 'Analyze';
-    if (!busy) {
-      $('#analyze').innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg> Analyze';
+    $('#analyze').setAttribute('aria-busy', String(busy));
+    if (busy) {
+      setMode('Analyzing…', 'busy');
+      $('#analyze').textContent = 'Analyzing…';
+    } else {
+      setMode('Ready', '');
+      $('#analyze').innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg> Analyze';
     }
   }
 
@@ -389,6 +710,7 @@
     showError('');
     $('#result').classList.remove('on');
     state.applied = false;
+    let failed = false;
     try {
       const response = await fetch('/api/review?folder=' + encodeURIComponent(folder || ''));
       const data = await response.json();
@@ -401,12 +723,14 @@
       if (!folder) $('#folder').value = data.folder;
       render(data);
     } catch (error) {
+      failed = true;
       showError(error.message || String(error));
       $('#summary').hidden = true;
       $('#content').hidden = true;
       $('#actionbar').classList.remove('on');
     } finally {
       setBusy(false);
+      if (failed) setMode('Error', 'error');
     }
   }
 
@@ -417,7 +741,10 @@
     $('#content').hidden = !hasFiles;
     $('#empty').hidden = hasFiles;
     $('#actionbar').classList.toggle('on', hasFiles && data.proposals.length > 0);
-    if (!hasFiles) return;
+    if (!hasFiles) {
+      setMode('Ready', '');
+      return;
+    }
 
     $('#stat-files').textContent = data.files;
     $('#stat-groups').textContent = data.groups.length;
@@ -427,6 +754,12 @@
     $('#dupes-count').textContent = data.groups.length;
     $('#findings-count').textContent = data.findings.length;
     $('#attn-count').textContent = data.skipped.length;
+    $('#side-groups').textContent = data.groups.length;
+    $('#side-docs').textContent = data.findings.length;
+    $('#side-tags').textContent = data.proposals.length;
+    $('#side-attn').textContent = data.skipped.length;
+    $('#side-folder').textContent = data.folder;
+    $('#side-folder').title = data.folder;
     $('#total-count').textContent = data.proposals.length;
 
     renderGroups(data.groups);
@@ -553,6 +886,7 @@
     const button = $('#approve');
     button.disabled = true;
     button.textContent = 'Applying…';
+    setMode('Applying tags…', 'busy');
     showError('');
     try {
       const response = await fetch('/api/apply', {
@@ -563,6 +897,7 @@
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Could not apply the tags.');
       state.applied = true;
+      setMode('Tags applied', 'done');
       const appliedFiles = new Set(data.applied.map((item) => item.file));
       document.querySelectorAll('.tag-row').forEach((row) => {
         const checkbox = row.querySelector('.tag-check');
@@ -582,10 +917,84 @@
       button.textContent = 'Applied';
     } catch (error) {
       showError(error.message || String(error));
+      setMode('Error', 'error');
       button.disabled = false;
       updateSelection();
     }
   }
+
+  /* ---------- desktop chrome ---------- */
+  const win = $('#window');
+
+  function restoreWindow() {
+    win.classList.remove('is-min', 'is-closed');
+    $('#restore-bar').hidden = true;
+    $('#closed-screen').hidden = true;
+  }
+
+  $('#win-min').addEventListener('click', () => {
+    win.classList.add('is-min');
+    $('#restore-bar').hidden = false;
+  });
+  $('#win-max').addEventListener('click', () => {
+    win.classList.toggle('is-max');
+    $('#win-max').setAttribute('aria-pressed', String(win.classList.contains('is-max')));
+  });
+  $('#win-close').addEventListener('click', () => {
+    win.classList.add('is-closed');
+    $('#closed-screen').hidden = false;
+  });
+  $('#restore').addEventListener('click', restoreWindow);
+  $('#reopen').addEventListener('click', restoreWindow);
+
+  function openAbout() { $('#about-modal').hidden = false; }
+  function closeAbout() { $('#about-modal').hidden = true; }
+  $('#win-about').addEventListener('click', openAbout);
+  $('#about-close').addEventListener('click', closeAbout);
+  $('#about-ok').addEventListener('click', closeAbout);
+  $('#about-modal').addEventListener('click', (event) => {
+    if (event.target === $('#about-modal')) closeAbout();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeAbout();
+  });
+
+  function scrollTop() {
+    $('#content-scroll').scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  document.querySelectorAll('[data-action]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const action = button.dataset.action;
+      if (action === 'home') { restoreWindow(); scrollTop(); }
+      if (action === 'browse') { restoreWindow(); $('#browse').click(); }
+      if (action === 'search') { restoreWindow(); $('#folder').focus(); $('#folder').select(); }
+      if (action === 'about') { openAbout(); }
+    });
+  });
+
+  document.querySelectorAll('[data-scroll]').forEach((button) => {
+    button.addEventListener('click', () => {
+      document.querySelectorAll('.side-item').forEach((item) => item.classList.remove('active'));
+      button.classList.add('active');
+      const target = button.dataset.scroll;
+      if (target === 'top') {
+        scrollTop();
+      } else {
+        const element = document.getElementById(target);
+        if (element) element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  $('#launcher').addEventListener('click', () => document.body.classList.toggle('dock-hidden'));
+
+  function tick() {
+    const now = new Date();
+    $('#clock').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+  tick();
+  setInterval(tick, 15000);
 
   $('#folder-form').addEventListener('submit', (event) => {
     event.preventDefault();
