@@ -4,6 +4,8 @@
 
 ArchiveWise is a Uliya Skill for the UGREEN NAS Skill Hackathon 2026 (Track: **Automate Your Workflow**). It reviews one user-selected NAS folder, reports the duplicate groups returned by the NAS duplicate scan, extracts requested document facts with source evidence, and proposes tags. Nothing is tagged until the user approves the exact files and tag names.
 
+> **Instructors:** see [SETUP.md](SETUP.md) for install, demo, and validation steps.
+
 ![ArchiveWise local GUI overview](demo/archivewise-gui.png)
 
 ## What it does
@@ -14,6 +16,22 @@ ArchiveWise is a Uliya Skill for the UGREEN NAS Skill Hackathon 2026 (Track: **A
 - **Explicit approval.** Presents exact file and tag pairs and waits for approval, including approval to create a new tag.
 - **Honest states.** Reports `completed`, `failed`, `cancelled`, `waiting_user`, and `waiting_approval` without describing planned work as done.
 - **Preserves files.** This version does not delete, move, rename, compress, or share any reviewed file.
+
+## Screenshots
+
+The GUI opens on the Overview page above; every Review item has its own page.
+
+<p align="center">
+  <img src="demo/archivewise-pages-duplicates.png" width="49%" alt="Duplicates page">
+  <img src="demo/archivewise-pages-documents.png" width="49%" alt="Documents page">
+</p>
+<p align="center">
+  <img src="demo/archivewise-pages-tags.png" width="49%" alt="Tags page with approval bar">
+  <img src="demo/archivewise-pages-attention.png" width="49%" alt="Needs attention page">
+</p>
+<p align="center">
+  <img src="demo/archivewise-browse.png" width="49%" alt="In-app folder browser">
+</p>
 
 ## Submission artifacts
 
@@ -43,6 +61,7 @@ A static pass proves package structure and catalog mapping only. It does not pro
 | `dist/` | Submission ZIP and proposal PDF |
 | `docs/` | Proposal source, test cases, capability verification, walkthrough, validation record |
 | `demo/` | Local simulator and web GUI — **not part of the submitted ZIP** |
+| `SETUP.md` | Instructor setup and test guide |
 | `build.md` | Round 1 project plan and acceptance criteria |
 
 The third-party `uliya-skill-kit-0.7.3-en/` directory is used locally for checking and is intentionally not committed.
@@ -57,7 +76,7 @@ python demo\gui_server.py
 
 It opens <http://127.0.0.1:8765/>. Use the page navigation to inspect duplicates, documents, tags, and unresolved items. On the Tags page, tick the tags you approve and press **Approve selected**. Reviewed files are never modified; approved tags are recorded in `archivewise-tags.json` inside the reviewed folder.
 
-See [`demo/README.md`](demo/README.md) for GUI details, the CLI mode, and the demo's honest limits.
+See [SETUP.md](SETUP.md) for step-by-step instructions, and [`demo/README.md`](demo/README.md) for GUI details, the CLI mode, and the demo's honest limits.
 
 ## Try the real Skill
 
@@ -67,6 +86,7 @@ Upload `dist/archivewise.zip` to UGREEN SkillHub or submit it through the hackat
 
 ## Documentation
 
+- [Instructor setup and test guide](SETUP.md)
 - [Round 1 plan](build.md)
 - [Proposal source](docs/proposal.md)
 - [Test cases](docs/round1-test-cases.md)
